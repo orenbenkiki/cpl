@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.5"
+#define CPL_VERSION "0.0.6"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -357,23 +357,6 @@ namespace cpl {
       }
     };
 
-    /// A fast (unsafe) reference for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class ref : public borrow<T> {
-      using borrow<T>::borrow;
-
-    public:
-      /// Access the raw pointer.
-      const T* get() const {
-        return borrow<T>::m_raw_ptr;
-      }
-
-      /// Access the raw pointer.
-      T* get() {
-        return borrow<T>::m_raw_ptr;
-      }
-    };
-
     /// A fast (unsafe) pointer for data whose lifetime is determined
     /// elsewhere.
     template <typename T> class ptr : public borrow<T> {
@@ -392,6 +375,41 @@ namespace cpl {
 
       /// Access the raw pointer.
       T* get() const {
+        return borrow<T>::m_raw_ptr;
+      }
+    };
+
+    /// A fast (unsafe) reference for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ref : public borrow<T> {
+    public:
+      /// Unsafe construction from a raw pointer.
+      ref(T* raw_ptr, unsafe_raw_t) : borrow<T>(raw_ptr, unsafe_raw_t(0)) {
+      }
+
+      /// Unsafe construction from a different type of borrow.
+      template <typename U, typename C> ref(const borrow<U>& other, C cast_type) : borrow<T>(other, cast_type) {
+      }
+
+      /// Copy a reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      ref(const ref<U>& other)
+        : borrow<T>(other) {
+      }
+
+      /// Copy a pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      explicit ref(const ptr<U>& other)
+        : borrow<T>(other) {
+      }
+
+      /// Access the raw pointer.
+      const T* get() const {
+        return borrow<T>::m_raw_ptr;
+      }
+
+      /// Access the raw pointer.
+      T* get() {
         return borrow<T>::m_raw_ptr;
       }
     };
@@ -493,6 +511,30 @@ namespace cpl {
       }
     };
 
+    /// A safe (slow) pointer for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ptr : public borrow<T> {
+      using borrow<T>::borrow;
+
+    public:
+      /// Deterministic null default constructor.
+      ptr() : borrow<T>(nullptr, unsafe_raw_t(0)) {
+      }
+
+      /// Explicit null constructor.
+      ptr(nullptr_t) : ptr() {
+      }
+
+      /// Access the raw pointer.
+      ///
+      /// This isn't as safe as we'd like it to be, since another thread may
+      /// delete the value between the time we `return` and the time the caller
+      /// uses the value.
+      T* get() const {
+        return borrow<T>::m_weak_ptr.lock().get();
+      }
+    };
+
     /// A safe (slow) reference for data whose lifetime is determined
     /// elsewhere.
     template <typename T> class ref : public borrow<T> {
@@ -507,16 +549,23 @@ namespace cpl {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
       }
 
-      /// Copy a borrow.
+      /// Copy a reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      ref(const borrow<U>& other)
+      ref(const ref<U>& other)
+        : borrow<T>(other) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Copy a pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      explicit ref(const ptr<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
       }
 
       /// Ensure no assignment of a null reference.
-      template <typename... Args> ref& operator=(Args&&... args) {
-        borrow<T>::operator=(std::forward<Args>(args)...);
+      const ref& operator=(const ref<T>& other) {
+        borrow<T>::operator=(other);
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
         return *this;
       }
@@ -544,29 +593,6 @@ namespace cpl {
       }
     };
 
-    /// A safe (slow) pointer for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class ptr : public borrow<T> {
-      using borrow<T>::borrow;
-
-    public:
-      /// Deterministic null default constructor.
-      ptr() : borrow<T>(nullptr, unsafe_raw_t(0)) {
-      }
-
-      /// Explicit null constructor.
-      ptr(nullptr_t) : ptr() {
-      }
-
-      /// Access the raw pointer.
-      ///
-      /// This isn't as safe as we'd like it to be, since another thread may
-      /// delete the value between the time we `return` and the time the caller
-      /// uses the value.
-      T* get() const {
-        return borrow<T>::m_weak_ptr.lock().get();
-      }
-    };
 #endif // DOXYGEN || CPL_SAFE
 
 #ifdef DOXYGEN

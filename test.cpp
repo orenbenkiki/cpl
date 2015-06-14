@@ -190,12 +190,6 @@ namespace test {
       THEN("using to construct a reference will be " CPL_VARIANT) {
         REQUIRE_CPL_THROWS(cpl::ref<Foo>{ null_foo_ptr });
       }
-      THEN("assigning it to a reference will be " CPL_VARIANT) {
-        int foo = __LINE__;
-        Foo raw_foo{ foo };
-        cpl::ref<Foo> foo_ref{ cpl::unsafe_ref<Foo>(raw_foo) };
-        REQUIRE_CPL_THROWS(foo_ref = null_foo_ptr);
-      }
     }
   }
 
@@ -371,28 +365,25 @@ namespace test {
       cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
       THEN("we can use it to construct a reference") {
         cpl::ref<Bar> bar_ref{ bar_ptr };
-        THEN("we can assign it to a reference") {
-          bar_ref = bar_ptr;
-        }
       }
       THEN("we can use it to construct a reference to const") {
         cpl::ref<const Bar> const_bar_ref{ bar_ptr };
-        THEN("we can assign it to a reference to const") {
-          const_bar_ref = bar_ptr;
-        }
       }
       THEN("we can use it to construct a reference to the base class") {
         cpl::ref<Foo> foo_ref{ bar_ptr };
-        THEN("we can assign it to a reference to the base class") {
-          foo_ref = bar_ptr;
-        }
       }
       THEN("we can use it to construct a reference to a const base class") {
         cpl::ref<const Foo> const_foo_ref{ bar_ptr };
-        THEN("we can assign it to a reference to a const base class") {
-          const_foo_ref = bar_ptr;
-        }
       }
     }
   }
+
+  /// Used for @ref MUST_NOT_COMPILE.
+  static Foo s_raw_foo;
+
+  /// Used for @ref MUST_NOT_COMPILE.
+  static cpl::ref<Foo> s_foo_ref{ cpl::unsafe_ref<Foo>(s_raw_foo) };
+
+  /// Ensure there's no implicit conversion from pointer to reference.
+  MUST_NOT_COMPILE(Foo, s_foo_ref = cpl::ptr<T>(), "implicit conversion of pointer to a reference");
 }
