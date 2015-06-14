@@ -286,6 +286,83 @@ namespace test {
     REQUIRE(Foo::live_objects == 0);
   }
 
+  TEST_CASE("converting a uref to a uptr") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a unique reference to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uref<Bar> bar_uref{ cpl::make_uref<Bar>(foo, bar) };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can move it to a pointer") {
+        cpl::uptr<Bar> bar_uptr{ std::move(bar_uref) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer") {
+        cpl::uptr<Bar> bar_uptr;
+        bar_uptr = std::move(bar_uref);
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can move it to a pointer to const") {
+        cpl::uptr<const Bar> const_bar_uptr{ std::move(bar_uref) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer to const") {
+        cpl::uptr<const Bar> const_bar_uptr;
+        const_bar_uptr = std::move(bar_uref);
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can move it to a pointer to the base class") {
+        cpl::uptr<Foo> foo_uptr{ std::move(bar_uref) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer to the base class") {
+        cpl::uptr<Foo> foo_uptr;
+        foo_uptr = std::move(bar_uref);
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can move it to a pointer to a const base class") {
+        cpl::uptr<const Foo> const_foo_uptr{ std::move(bar_uref) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer to a const base class") {
+        cpl::uptr<const Foo> const_foo_uptr;
+        const_foo_uptr = std::move(bar_uref);
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("converting a uptr to a uref") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a unique pointer to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uptr<Bar> bar_uptr{ cpl::make_uptr<Bar>(foo, bar) };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can move it to a reference") {
+        cpl::uref<Bar> bar_uref{ std::move(bar_uptr) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can move it to a reference to const") {
+        cpl::uref<const Bar> const_bar_uref{ std::move(bar_uptr) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can move it to a reference to the base class") {
+        cpl::uref<Foo> foo_uref{ std::move(bar_uptr) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can move it to a reference to a const base class") {
+        cpl::uref<const Foo> const_foo_uref{ std::move(bar_uptr) };
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  /// Ensure there's no implicit conversion from pointer to reference.
+  MUST_NOT_COMPILE(Foo, s_foo_uref = cpl::uptr<T>(), "implicit conversion of pointer to a reference");
+
   TEST_CASE("constructing a ref") {
     REQUIRE(Foo::live_objects == 0);
     GIVEN("raw data") {
@@ -296,7 +373,7 @@ namespace test {
       THEN("we can construct an unsafe reference to it") {
         cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
         REQUIRE(Foo::live_objects == 1);
-        THEN("we can use it to initialize another reference") {
+        THEN("we can copy it to another reference") {
           cpl::ref<Bar> bar_ref_copy{ bar_ref };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to another reference") {
@@ -304,7 +381,7 @@ namespace test {
             REQUIRE(Foo::live_objects == 1);
           }
         }
-        THEN("we can use it to initialize a reference to const") {
+        THEN("we can copy it to a reference to const") {
           cpl::ref<const Bar> const_bar_ref_copy{ bar_ref };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a reference to const") {
@@ -312,7 +389,7 @@ namespace test {
             REQUIRE(Foo::live_objects == 1);
           }
         }
-        THEN("we can use it to initialize a reference to a base class") {
+        THEN("we can copy it to a reference to a base class") {
           cpl::ref<Foo> foo_ref{ bar_ref };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a reference to a base class") {
@@ -320,7 +397,7 @@ namespace test {
             REQUIRE(Foo::live_objects == 1);
           }
         }
-        THEN("we can use it to initialize a reference to a const base class") {
+        THEN("we can copy it to a reference to a const base class") {
           cpl::ref<const Foo> const_foo_ref{ bar_ref };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a reference to a const base class") {
@@ -365,7 +442,7 @@ namespace test {
       Bar raw_bar{ foo, bar };
       cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
       REQUIRE(Foo::live_objects == 1);
-      THEN("if we use it to construct a reference to a base class") {
+      THEN("if we copy it to a reference to a base class") {
         cpl::ref<Foo> foo_ref{ bar_ref };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can static_cast it back to a reference to the derived class") {
@@ -381,7 +458,7 @@ namespace test {
           REQUIRE(Foo::live_objects == 1);
         }
       }
-      THEN("we can use it to construct a reference to a const") {
+      THEN("we can copy it to copy a reference to a const") {
         cpl::ref<const Bar> const_bar_ref{ bar_ref };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can const_cast it back to a reference mutable") {
@@ -416,7 +493,7 @@ namespace test {
       THEN("we can construct an unsafe pointer to it") {
         cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
         REQUIRE(Foo::live_objects == 1);
-        THEN("we can use it to initialize another pointer") {
+        THEN("we can copy it to another pointer") {
           cpl::ptr<Bar> bar_ptr_copy{ bar_ptr };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to another pointer") {
@@ -424,7 +501,7 @@ namespace test {
             REQUIRE(Foo::live_objects == 1);
           }
         }
-        THEN("we can use it to initialize a pointer to const") {
+        THEN("we can copy it to a pointer to const") {
           cpl::ptr<const Bar> const_bar_ptr_copy{ bar_ptr };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a pointer to const") {
@@ -432,7 +509,7 @@ namespace test {
             REQUIRE(Foo::live_objects == 1);
           }
         }
-        THEN("we can use it to initialize a pointer to a base class") {
+        THEN("we can copy it to a pointer to a base class") {
           cpl::ptr<Foo> foo_ptr{ bar_ptr };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a pointer to a base class") {
@@ -440,7 +517,7 @@ namespace test {
             REQUIRE(Foo::live_objects == 1);
           }
         }
-        THEN("we can use it to initialize a pointer to a const base class") {
+        THEN("we can copy it to a pointer to a const base class") {
           cpl::ptr<const Foo> const_foo_ptr{ bar_ptr };
           REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a pointer to a const base class") {
@@ -473,7 +550,7 @@ namespace test {
       Bar raw_bar{ foo, bar };
       cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
       REQUIRE(Foo::live_objects == 1);
-      THEN("if we use it to construct a pointer to a base class") {
+      THEN("if we copy it to a pointer to a base class") {
         cpl::ptr<Foo> foo_ptr{ bar_ptr };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can static_cast it back to a pointer to the derived class") {
@@ -489,7 +566,7 @@ namespace test {
           REQUIRE(Foo::live_objects == 1);
         }
       }
-      THEN("we can use it to construct a pointer to a const") {
+      THEN("we can copy it to a pointer to a const") {
         cpl::ptr<const Bar> const_bar_ptr{ bar_ptr };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can const_cast it back to a pointer mutable") {
@@ -509,7 +586,7 @@ namespace test {
       Bar raw_bar{ foo, bar };
       cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
       REQUIRE(Foo::live_objects == 1);
-      THEN("we can use it to construct a pointer") {
+      THEN("we can copy it to a pointer") {
         cpl::ptr<Bar> bar_ptr{ bar_ref };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can assign it to a pointer") {
@@ -517,7 +594,7 @@ namespace test {
           REQUIRE(Foo::live_objects == 1);
         }
       }
-      THEN("we can use it to construct a pointer to const") {
+      THEN("we can copy it to a pointer to const") {
         cpl::ptr<const Bar> const_bar_ptr{ bar_ref };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can assign it to a pointer to const") {
@@ -525,7 +602,7 @@ namespace test {
           REQUIRE(Foo::live_objects == 1);
         }
       }
-      THEN("we can use it to construct a pointer to the base class") {
+      THEN("we can copy it to a pointer to the base class") {
         cpl::ptr<Foo> foo_ptr{ bar_ref };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can assign it to a pointer to the base class") {
@@ -533,7 +610,7 @@ namespace test {
           REQUIRE(Foo::live_objects == 1);
         }
       }
-      THEN("we can use it to construct a pointer to a const base class") {
+      THEN("we can copy it to a pointer to a const base class") {
         cpl::ptr<const Foo> const_foo_ptr{ bar_ref };
         REQUIRE(Foo::live_objects == 1);
         THEN("we can assign it to a pointer to a const base class") {
@@ -553,19 +630,19 @@ namespace test {
       Bar raw_bar{ foo, bar };
       cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
       REQUIRE(Foo::live_objects == 1);
-      THEN("we can use it to construct a reference") {
+      THEN("we can copy it to a reference") {
         cpl::ref<Bar> bar_ref{ bar_ptr };
         REQUIRE(Foo::live_objects == 1);
       }
-      THEN("we can use it to construct a reference to const") {
+      THEN("we can copy it to a reference to const") {
         cpl::ref<const Bar> const_bar_ref{ bar_ptr };
         REQUIRE(Foo::live_objects == 1);
       }
-      THEN("we can use it to construct a reference to the base class") {
+      THEN("we can copy it to a reference to the base class") {
         cpl::ref<Foo> foo_ref{ bar_ptr };
         REQUIRE(Foo::live_objects == 1);
       }
-      THEN("we can use it to construct a reference to a const base class") {
+      THEN("we can copy it to a reference to a const base class") {
         cpl::ref<const Foo> const_foo_ref{ bar_ptr };
         REQUIRE(Foo::live_objects == 1);
       }
