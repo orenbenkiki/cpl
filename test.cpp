@@ -658,4 +658,89 @@ namespace test {
 
   /// Ensure there's no implicit conversion from pointer to reference.
   MUST_NOT_COMPILE(Foo, s_foo_ref = cpl::ptr<T>(), "implicit conversion of pointer to a reference");
+
+  TEST_CASE("borrowing a unique indirection") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("we have a unique reference") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uref<Bar> bar_uref = cpl::make_uref<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr{ bar_uref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr;
+        bar_ptr = bar_uref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr{ bar_uref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr;
+        bar_ptr = bar_uref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref{ bar_uref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(*bar_uref.get());
+        bar_ref = bar_uref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref{ bar_uref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(*bar_uref.get());
+        bar_ref = bar_uref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    GIVEN("we have a non-null unique pointer") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uptr<Bar> bar_uptr = cpl::make_uptr<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr{ bar_uptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr;
+        bar_ptr = bar_uptr;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr{ bar_uptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr;
+        bar_ptr = bar_uptr;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref{ bar_uptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref{ bar_uptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  /// Ensure there's no implicit conversion from unique pointer to reference.
+  MUST_NOT_COMPILE(Foo, s_foo_ref = cpl::uptr<T>(), "implicit conversion of unique pointer to a reference");
+
+  /// Ensure there's no implicit conversion from derived unique pointer to reference.
+  MUST_NOT_COMPILE(Bar, s_foo_ref = cpl::uptr<T>(), "implicit conversion of unique pointer to a reference");
 }

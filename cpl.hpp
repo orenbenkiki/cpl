@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.8"
+#define CPL_VERSION "0.0.9"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -290,7 +290,6 @@ namespace cpl {
 #endif // CPL_ASSERT
 
 namespace cpl {
-
   /// An additional parameter for unsafe raw pointer operations.
   ///
   /// This allows us to use @ref MUST_NOT_COMPILE for verifying unsafe
@@ -363,6 +362,7 @@ namespace cpl {
     /// A fast (unsafe) indirection that deletes the data when it is deleted.
     template <typename T> class unique {
       template <typename U> friend class unique;
+      template <typename U> friend class borrow;
 
     protected:
       /// The wrapped unique pointer.
@@ -397,6 +397,7 @@ namespace cpl {
 
     /// A fast (unsafe) pointer that deletes the data when it is deleted.
     template <typename T> class uptr : public unique<T> {
+      template <typename U> friend class ptr;
       using unique<T>::unique;
 
     public:
@@ -488,6 +489,12 @@ namespace cpl {
       inline borrow(borrow<U> other)
         : m_raw_ptr(other.m_raw_ptr) {
       }
+
+      /// Construction from a unique indirection.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline borrow(const unique<U>& other)
+        : m_raw_ptr(other.m_unique_ptr.get()) {
+      }
     };
 
     /// A fast (unsafe) pointer for data whose lifetime is determined
@@ -533,6 +540,18 @@ namespace cpl {
       /// Copy a pointer.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       explicit inline ref(const ptr<U>& other)
+        : borrow<T>(other) {
+      }
+
+      /// Copy a unique reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref(const uref<U>& other)
+        : borrow<T>(other) {
+      }
+
+      /// Copy a unique pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      explicit inline ref(const uptr<U>& other)
         : borrow<T>(other) {
       }
 
@@ -586,6 +605,7 @@ namespace cpl {
     /// A safe (slow) indirection that deletes the data when it is deleted.
     template <typename T> class unique {
       template <typename U> friend class unique;
+      template <typename U> friend class borrow;
 
     protected:
       /// The wrapped unique pointer.
@@ -596,7 +616,7 @@ namespace cpl {
 
     public:
       /// Unsafe construction from a raw pointer.
-      inline unique(T* raw_ptr, unsafe_raw_t) : m_unique_ptr(raw_ptr) {
+      inline unique(T* raw_ptr, unsafe_raw_t) : m_unique_ptr(raw_ptr), m_shared_ptr(raw_ptr, no_delete<T>()) {
       }
 
       /// Cast construction from a different type of unique indirection.
@@ -721,6 +741,12 @@ namespace cpl {
                                           : std::shared_ptr<T>(nullptr)),
           m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock()) {
       }
+
+      /// Construction from a unique indirection.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline borrow(const unique<U>& other)
+        : m_unsafe_ptr(), m_weak_ptr(other.m_shared_ptr) {
+      }
     };
 
     /// A safe (slow) pointer for data whose lifetime is determined
@@ -771,6 +797,20 @@ namespace cpl {
       /// Copy a pointer.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       explicit inline ref(const ptr<U>& other)
+        : borrow<T>(other) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Copy a unique reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref(const uref<U>& other)
+        : borrow<T>(other) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Copy a unique pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      explicit inline ref(const uptr<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
       }
