@@ -152,6 +152,68 @@ namespace test {
 #endif
   }
 
+  TEST_CASE("constructing a ref") {
+    GIVEN("raw data") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      Bar raw_bar{ foo, bar };
+      THEN("we can construct an unsafe reference to it") {
+        cpl::ref<Bar> bar_ptr{ cpl::unsafe_ref<Bar>(raw_bar) };
+        THEN("we can use it to initialize another reference") {
+          cpl::ref<Bar> bar_ptr_copy{ bar_ptr };
+        }
+        THEN("we can use it to initialize a reference to a base class") {
+          cpl::ref<Foo> foo_ptr{ bar_ptr };
+        }
+      }
+    }
+  }
+
+  TEST_CASE("casting a ref") {
+    GIVEN("a borrowed reference to a const derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      Bar raw_bar{ foo, bar };
+      cpl::ref<Bar> bar_ptr{ cpl::unsafe_ref<Bar>(raw_bar) };
+      THEN("if we view it as a reference to a base class") {
+        cpl::ref<Foo> foo_ptr{ bar_ptr };
+        THEN("we can static_cast it back to a reference to the derived class") {
+          cpl::ref<Bar> cast_bar_ptr = cpl::cast_static<Bar>(foo_ptr);
+        }
+        THEN("we can dynamic_cast it back to a reference to the derived class") {
+          cpl::ref<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
+        }
+        THEN("we can reinterpret_cast it back to a reference to the derived class") {
+          cpl::ref<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
+        }
+      }
+      THEN("we can view it as a reference to a const") {
+        cpl::ref<const Bar> const_bar_ptr{ bar_ptr };
+        THEN("we can const_cast it back to a reference mutable") {
+          cpl::ref<Bar> cast_bar_ptr = cpl::cast_const<Bar>(const_bar_ptr);
+        }
+      }
+    }
+  }
+
+  /// Ensure it is not possible to default construct a `cpl::ref`.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>(), "default reference construction");
+
+  /// Ensure it is not possible to explicitly construct a null `cpl::ref`.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>(nullptr), "explicit null reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` from a raw reference.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>{(T*)nullptr }, "unsafe reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` to an unrelated type.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>{ cpl::unsafe_ref<int>(*(int*)nullptr) }, "unrelated reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` to a sub-class.
+  MUST_NOT_COMPILE(Bar, cpl::ref<T>{ cpl::unsafe_ref<Foo>(*(Foo*)nullptr) }, "sub-class reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` to violate `const`-ness.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>{ cpl::unsafe_ref<const Foo>(*(const Foo*)nullptr) }, "const violation reference construction");
+
   TEST_CASE("constructing a ptr") {
     THEN("we have a default constructor") {
       cpl::ptr<Foo> default_ptr;

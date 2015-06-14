@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.1"
+#define CPL_VERSION "0.0.2"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -320,6 +320,45 @@ namespace cpl {
 #endif // DOXYGEN
 
 #if defined(DOXYGEN) || defined(CPL_FAST)
+    /// A fast (unsafe) reference for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ref {
+      /// The raw pointer to the value.
+      T* m_raw_ptr;
+
+    public:
+      /// Unsafe construction from a raw pointer.
+      ref(T* raw_ptr, unsafe_raw_t) : m_raw_ptr(raw_ptr) {
+      }
+
+      /// Unsafe construction from a different type of reference.
+      template <typename U> ref(ref<U> other, unsafe_raw_t) : m_raw_ptr(reinterpret_cast<T*>(other.get())) {
+      }
+
+      /// Unsafe construction from a different type of reference.
+      template <typename U> ref(ref<U> other, unsafe_static_t) : m_raw_ptr(static_cast<T*>(other.get())) {
+      }
+
+      /// Unsafe construction from a different type of reference.
+      template <typename U> ref(ref<U> other, unsafe_dynamic_t) : m_raw_ptr(dynamic_cast<T*>(other.get())) {
+      }
+
+      /// Unsafe construction from a different type of reference.
+      template <typename U> ref(ref<U> other, unsafe_const_t) : m_raw_ptr(const_cast<T*>(other.get())) {
+      }
+
+      /// Copy a reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      ref(ref<U> other)
+        : m_raw_ptr(other.get()) {
+      }
+
+      /// Access the raw pointer.
+      T* get() const {
+        return m_raw_ptr;
+      }
+    };
+
     /// A fast (unsafe) pointer for data whose lifetime is determined
     /// elsewhere.
     template <typename T> class ptr {
@@ -432,6 +471,50 @@ namespace cpl {
       }
     }
 
+    /// A safe (slow) reference for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ref {
+      template <typename U> friend class ref;
+
+      /// If we hold a pointer created by `unsafe_ref`, then this will
+      /// provide a lifetime to `m_weak_ptr`.
+      std::shared_ptr<T> m_unsafe_ptr;
+
+      /// A weak pointer to the track the lifetime of the data.
+      std::weak_ptr<T> m_weak_ptr;
+
+    public:
+      /// Unsafe construction from a raw pointer.
+      ref(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()) {
+      }
+
+      /// Unsafe construction from a different type of reference.
+      template <typename U, typename C>
+      ref(const ref<U>& other, C cast_type)
+        : m_unsafe_ptr(cast_shared_ptr<T, U>(other.m_unsafe_ptr, cast_type)),
+          m_weak_ptr(cast_weak_ptr(m_unsafe_ptr, other.m_weak_ptr, cast_type)) {
+      }
+
+      /// Copy a reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      ref(const ref<U>& other)
+        : m_unsafe_ptr(other.m_unsafe_ptr ? std::shared_ptr<T>(other.m_unsafe_ptr.get(), no_delete<T>())
+                                          : std::shared_ptr<T>(nullptr)),
+          m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock()) {
+      }
+
+      /// Access the raw pointer.
+      ///
+      /// This isn't as safe as we'd like it to be, since another thread may
+      /// delete the value between the time we `return` and the time the caller
+      /// uses the value.
+      T* get() const {
+        T* raw_ptr = m_weak_ptr.lock().get();
+        CPL_ASSERT(raw_ptr, "accessing a null reference");
+        return raw_ptr;
+      }
+    };
+
     /// A safe (slow) pointer for data whose lifetime is determined
     /// elsewhere.
     template <typename T> class ptr {
@@ -481,7 +564,6 @@ namespace cpl {
         return m_weak_ptr.lock().get();
       }
     };
-
 #endif // DOXYGEN || CPL_SAFE
 
 #ifdef DOXYGEN
@@ -491,6 +573,14 @@ namespace cpl {
   /// @file
   /// Implement the unsafe creation of pointers and references.inters and
   /// references.
+
+  /// Create an unsafe reference to raw data.
+  ///
+  /// This is playing with fire. It is OK if the data is static, but there's
+  /// no way to ask the compiler to ensure that.
+  template <typename T> ref<T> unsafe_ref(T& data) {
+    return ref<T>{ &data, unsafe_raw_t(0) };
+  }
 
   /// Create an unsafe pointer to raw data.
   ///
@@ -505,6 +595,12 @@ namespace cpl {
 #endif // DOXYGEN
 
 #if defined(DOXYGEN) || defined(CPL_FAST)
+    /// A static cast between reference types.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    ref<T> cast_static(ref<U> from_ref) {
+      return ref<T>{ from_ref, unsafe_static_t(0) };
+    }
+
     /// A static cast between pointer types.
     template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
     ptr<T> cast_static(ptr<U> from_ptr) {
@@ -519,6 +615,19 @@ namespace cpl {
 #endif // DOXYGEN
 
 #if defined(DOXYGEN) || defined(CPL_SAFE)
+    /// Static cast between related reference types.
+    ///
+    /// This verifies that the raw pointer value did not change, which will
+    /// always be true unless you use virtual base classes.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    ref<T> cast_static(ref<U> from_ref) {
+      U* from_raw = from_ref.get();
+      T* to_dynamic = dynamic_cast<T*>(from_raw);
+      T* to_raw = static_cast<T*>(from_raw);
+      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+      return ref<T>{ from_ref, unsafe_raw_t(0) };
+    }
+
     /// Static cast between related pointer types.
     ///
     /// This verifies that the pointer value did not change, which will
@@ -537,16 +646,34 @@ namespace cpl {
   }
 #endif // DOXYGEN
 
+  /// A reinterpret cast between reference types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  ref<T> cast_reinterpret(ref<U> from_ref) {
+    return ref<T>{ from_ref, unsafe_raw_t(0) };
+  }
+
   /// A reinterpret cast between pointer types.
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   ptr<T> cast_reinterpret(ptr<U> from_ptr) {
     return ptr<T>{ from_ptr, unsafe_raw_t(0) };
   }
 
+  /// A dynamic cast between reference types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  ref<T> cast_dynamic(ref<U> from_ref) {
+    return ref<T>{ from_ref, unsafe_dynamic_t(0) };
+  }
+
   /// A dynamic cast between pointer types.
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   ptr<T> cast_dynamic(ptr<U> from_ptr) {
     return ptr<T>{ from_ptr, unsafe_dynamic_t(0) };
+  }
+
+  /// A const cast between reference types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  ref<T> cast_const(ref<U> from_ref) {
+    return ref<T>{ from_ref, unsafe_const_t(0) };
   }
 
   /// A const cast between pointer types.
