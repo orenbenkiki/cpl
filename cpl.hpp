@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.4"
+#define CPL_VERSION "0.0.5"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -474,7 +474,7 @@ namespace cpl {
 
     public:
       /// Unsafe construction from a raw pointer.
-      borrow(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()) {
+      borrow(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()), m_weak_ptr(m_unsafe_ptr) {
       }
 
       /// Unsafe construction from a different type of borrow.
@@ -496,9 +496,31 @@ namespace cpl {
     /// A safe (slow) reference for data whose lifetime is determined
     /// elsewhere.
     template <typename T> class ref : public borrow<T> {
-      using borrow<T>::borrow;
-
     public:
+      /// Unsafe construction from a raw pointer.
+      ref(T* raw_ptr, unsafe_raw_t) : borrow<T>(raw_ptr, unsafe_raw_t(0)) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Unsafe construction from a different type of borrow.
+      template <typename U, typename C> ref(const borrow<U>& other, C cast_type) : borrow<T>(other, cast_type) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Copy a borrow.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      ref(const borrow<U>& other)
+        : borrow<T>(other) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Ensure no assignment of a null reference.
+      template <typename... Args> ref& operator=(Args&&... args) {
+        borrow<T>::operator=(std::forward<Args>(args)...);
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
+        return *this;
+      }
+
       /// Access the raw pointer.
       ///
       /// This isn't as safe as we'd like it to be, since another thread may

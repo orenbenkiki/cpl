@@ -185,6 +185,18 @@ namespace test {
         }
       }
     }
+    GIVEN("a null pointer") {
+      cpl::ptr<Foo> null_foo_ptr;
+      THEN("using to construct a reference will be " CPL_VARIANT) {
+        REQUIRE_CPL_THROWS(cpl::ref<Foo>{ null_foo_ptr });
+      }
+      THEN("assigning it to a reference will be " CPL_VARIANT) {
+        int foo = __LINE__;
+        Foo raw_foo{ foo };
+        cpl::ref<Foo> foo_ref{ cpl::unsafe_ref<Foo>(raw_foo) };
+        REQUIRE_CPL_THROWS(foo_ref = null_foo_ptr);
+      }
+    }
   }
 
   TEST_CASE("casting a ref") {
