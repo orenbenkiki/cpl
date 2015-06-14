@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.2"
+#define CPL_VERSION "0.0.3"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -320,91 +320,79 @@ namespace cpl {
 #endif // DOXYGEN
 
 #if defined(DOXYGEN) || defined(CPL_FAST)
-    /// A fast (unsafe) reference for data whose lifetime is determined
+    /// A fast (unsafe) indirection for data whose lifetime is determined
     /// elsewhere.
-    template <typename T> class ref {
+    template <typename T> class borrow {
+      template <typename U> friend class borrow;
+
+    protected:
       /// The raw pointer to the value.
       T* m_raw_ptr;
 
     public:
       /// Unsafe construction from a raw pointer.
-      ref(T* raw_ptr, unsafe_raw_t) : m_raw_ptr(raw_ptr) {
+      borrow(T* raw_ptr, unsafe_raw_t) : m_raw_ptr(raw_ptr) {
       }
 
-      /// Unsafe construction from a different type of reference.
-      template <typename U> ref(ref<U> other, unsafe_raw_t) : m_raw_ptr(reinterpret_cast<T*>(other.get())) {
+      /// Unsafe construction from a different type of borrow.
+      template <typename U> borrow(borrow<U> other, unsafe_raw_t) : m_raw_ptr(reinterpret_cast<T*>(other.m_raw_ptr)) {
       }
 
-      /// Unsafe construction from a different type of reference.
-      template <typename U> ref(ref<U> other, unsafe_static_t) : m_raw_ptr(static_cast<T*>(other.get())) {
+      /// Unsafe construction from a different type of borrow.
+      template <typename U> borrow(borrow<U> other, unsafe_static_t) : m_raw_ptr(static_cast<T*>(other.m_raw_ptr)) {
       }
 
-      /// Unsafe construction from a different type of reference.
-      template <typename U> ref(ref<U> other, unsafe_dynamic_t) : m_raw_ptr(dynamic_cast<T*>(other.get())) {
+      /// Unsafe construction from a different type of borrow.
+      template <typename U> borrow(borrow<U> other, unsafe_dynamic_t) : m_raw_ptr(dynamic_cast<T*>(other.m_raw_ptr)) {
       }
 
-      /// Unsafe construction from a different type of reference.
-      template <typename U> ref(ref<U> other, unsafe_const_t) : m_raw_ptr(const_cast<T*>(other.get())) {
+      /// Unsafe construction from a different type of borrow.
+      template <typename U> borrow(borrow<U> other, unsafe_const_t) : m_raw_ptr(const_cast<T*>(other.m_raw_ptr)) {
       }
 
-      /// Copy a reference.
+      /// Copy a borrow.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      ref(ref<U> other)
-        : m_raw_ptr(other.get()) {
+      borrow(borrow<U> other)
+        : m_raw_ptr(other.m_raw_ptr) {
+      }
+    };
+
+    /// A fast (unsafe) reference for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ref : public borrow<T> {
+      using borrow<T>::borrow;
+
+    public:
+      /// Access the raw pointer.
+      const T* get() const {
+        return borrow<T>::m_raw_ptr;
       }
 
       /// Access the raw pointer.
-      T* get() const {
-        return m_raw_ptr;
+      T* get() {
+        return borrow<T>::m_raw_ptr;
       }
     };
 
     /// A fast (unsafe) pointer for data whose lifetime is determined
     /// elsewhere.
-    template <typename T> class ptr {
-      /// The raw pointer to the value.
-      T* m_raw_ptr;
+    template <typename T> class ptr : public borrow<T> {
+      using borrow<T>::borrow;
 
     public:
-      /// Unsafe construction from a raw pointer.
-      ptr(T* raw_ptr, unsafe_raw_t) : m_raw_ptr(raw_ptr) {
-      }
-
-      /// Unsafe construction from a different type of pointer.
-      template <typename U> ptr(ptr<U> other, unsafe_raw_t) : m_raw_ptr(reinterpret_cast<T*>(other.get())) {
-      }
-
-      /// Unsafe construction from a different type of pointer.
-      template <typename U> ptr(ptr<U> other, unsafe_static_t) : m_raw_ptr(static_cast<T*>(other.get())) {
-      }
-
-      /// Unsafe construction from a different type of pointer.
-      template <typename U> ptr(ptr<U> other, unsafe_dynamic_t) : m_raw_ptr(dynamic_cast<T*>(other.get())) {
-      }
-
-      /// Unsafe construction from a different type of pointer.
-      template <typename U> ptr(ptr<U> other, unsafe_const_t) : m_raw_ptr(const_cast<T*>(other.get())) {
-      }
-
       /// Deterministic null default constructor.
       ///
       /// This is slower from the `T*` default constructor, for sanity.
-      ptr() : m_raw_ptr(nullptr) {
+      ptr() : borrow<T>(nullptr, unsafe_raw_t(0)) {
       }
 
       /// Explicit null constructor.
       ptr(nullptr_t) : ptr() {
       }
 
-      /// Copy a pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      ptr(ptr<U> other)
-        : m_raw_ptr(other.get()) {
-      }
-
       /// Access the raw pointer.
       T* get() const {
-        return m_raw_ptr;
+        return borrow<T>::m_raw_ptr;
       }
     };
 #endif // DOXYGEN || CPL_FAST
@@ -471,13 +459,14 @@ namespace cpl {
       }
     }
 
-    /// A safe (slow) reference for data whose lifetime is determined
+    /// A safe (slow) indirection for data whose lifetime is determined
     /// elsewhere.
-    template <typename T> class ref {
-      template <typename U> friend class ref;
+    template <typename T> class borrow {
+      template <typename U> friend class borrow;
 
-      /// If we hold a pointer created by `unsafe_ref`, then this will
-      /// provide a lifetime to `m_weak_ptr`.
+    protected:
+      /// If we hold a pointer created by `unsafe_ref` or `unsafe_ptr`, then
+      /// this will provide a lifetime to `m_weak_ptr`.
       std::shared_ptr<T> m_unsafe_ptr;
 
       /// A weak pointer to the track the lifetime of the data.
@@ -485,22 +474,40 @@ namespace cpl {
 
     public:
       /// Unsafe construction from a raw pointer.
-      ref(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()) {
+      borrow(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()) {
       }
 
-      /// Unsafe construction from a different type of reference.
+      /// Unsafe construction from a different type of borrow.
       template <typename U, typename C>
-      ref(const ref<U>& other, C cast_type)
+      borrow(const borrow<U>& other, C cast_type)
         : m_unsafe_ptr(cast_shared_ptr<T, U>(other.m_unsafe_ptr, cast_type)),
           m_weak_ptr(cast_weak_ptr(m_unsafe_ptr, other.m_weak_ptr, cast_type)) {
       }
 
-      /// Copy a reference.
+      /// Copy a borrow.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      ref(const ref<U>& other)
+      borrow(const borrow<U>& other)
         : m_unsafe_ptr(other.m_unsafe_ptr ? std::shared_ptr<T>(other.m_unsafe_ptr.get(), no_delete<T>())
                                           : std::shared_ptr<T>(nullptr)),
           m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock()) {
+      }
+    };
+
+    /// A safe (slow) reference for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ref : public borrow<T> {
+      using borrow<T>::borrow;
+
+    public:
+      /// Access the raw pointer.
+      ///
+      /// This isn't as safe as we'd like it to be, since another thread may
+      /// delete the value between the time we `return` and the time the caller
+      /// uses the value.
+      const T* get() const {
+        const T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
+        CPL_ASSERT(raw_ptr, "accessing a null reference");
+        return raw_ptr;
       }
 
       /// Access the raw pointer.
@@ -508,8 +515,8 @@ namespace cpl {
       /// This isn't as safe as we'd like it to be, since another thread may
       /// delete the value between the time we `return` and the time the caller
       /// uses the value.
-      T* get() const {
-        T* raw_ptr = m_weak_ptr.lock().get();
+      T* get() {
+        T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
         CPL_ASSERT(raw_ptr, "accessing a null reference");
         return raw_ptr;
       }
@@ -517,42 +524,16 @@ namespace cpl {
 
     /// A safe (slow) pointer for data whose lifetime is determined
     /// elsewhere.
-    template <typename T> class ptr {
-      template <typename U> friend class ptr;
-
-      /// If we hold a pointer created by `unsafe_ptr`, then this will
-      /// provide a lifetime to `m_weak_ptr`.
-      std::shared_ptr<T> m_unsafe_ptr;
-
-      /// A weak pointer to the track the lifetime of the data.
-      std::weak_ptr<T> m_weak_ptr;
+    template <typename T> class ptr : public borrow<T> {
+      using borrow<T>::borrow;
 
     public:
-      /// Unsafe construction from a raw pointer.
-      ptr(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()) {
-      }
-
-      /// Unsafe construction from a different type of pointer.
-      template <typename U, typename C>
-      ptr(const ptr<U>& other, C cast_type)
-        : m_unsafe_ptr(cast_shared_ptr<T, U>(other.m_unsafe_ptr, cast_type)),
-          m_weak_ptr(cast_weak_ptr(m_unsafe_ptr, other.m_weak_ptr, cast_type)) {
-      }
-
       /// Deterministic null default constructor.
-      ptr() : m_unsafe_ptr(), m_weak_ptr() {
+      ptr() : borrow<T>(nullptr, unsafe_raw_t(0)) {
       }
 
       /// Explicit null constructor.
       ptr(nullptr_t) : ptr() {
-      }
-
-      /// Copy a pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      ptr(const ptr<U>& other)
-        : m_unsafe_ptr(other.m_unsafe_ptr ? std::shared_ptr<T>(other.m_unsafe_ptr.get(), no_delete<T>())
-                                          : std::shared_ptr<T>(nullptr)),
-          m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock()) {
       }
 
       /// Access the raw pointer.
@@ -561,7 +542,7 @@ namespace cpl {
       /// delete the value between the time we `return` and the time the caller
       /// uses the value.
       T* get() const {
-        return m_weak_ptr.lock().get();
+        return borrow<T>::m_weak_ptr.lock().get();
       }
     };
 #endif // DOXYGEN || CPL_SAFE
