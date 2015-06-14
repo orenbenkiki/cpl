@@ -78,7 +78,7 @@ namespace test {
 
     /// Allow constructing different instances for the tests.
     explicit Foo(int foo) : foo(foo) {
-      if (foo >= 0) {
+      if (foo > 0) {
         ++live_objects;
       }
     }
@@ -93,7 +93,7 @@ namespace test {
     /// pointers will see the wrong value. We _hope_ such access won't fault -
     /// it will be flagged by memory corruption tools.
     virtual ~Foo() {
-      if (foo >= 0) {
+      if (foo > 0) {
         --live_objects;
         foo = -1;
       }
@@ -152,70 +152,189 @@ namespace test {
 #endif
   }
 
+  TEST_CASE("constructing a uref") {
+    REQUIRE(Foo::live_objects == 0);
+    THEN("we can make unique data") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uref<Bar> made_ptr = cpl::make_uref<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can move it") {
+        cpl::uref<Bar> moved_ptr = std::move(made_ptr);
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  /// Used for @ref MUST_NOT_COMPILE.
+  static cpl::uref<Foo> s_foo_uref = cpl::make_uref<Foo>();
+
+#ifdef MAKE_SFINAE_RESPOND_TO_DELETED_FUNCTIONS
+  /// Ensure there's no copying `cpl::uref`.
+  MUST_NOT_COMPILE(Foo, cpl::uref<Foo>{ s_foo_uref }, "copying unique references");
+#endif // MAKE_SFINAE_RESPOND_TO_DELETED_FUNCTIONS
+
+  /// Ensure there's no assignment between `cpl::uref`.
+  MUST_NOT_COMPILE(Foo, s_foo_uref = s_foo_uref, "assigning unique references");
+
+  TEST_CASE("casting a uref") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a uref") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uref<Bar> bar_uref = cpl::make_uref<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("if we move it to a reference to a base class") {
+        cpl::uref<Foo> foo_ref{ std::move(bar_uref) };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can static_cast it back to a reference to the derived class") {
+          cpl::uref<Bar> cast_bar_ref = cpl::cast_static<Bar>(std::move(foo_ref));
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can dynamic_cast it back to a reference to the derived class") {
+          cpl::uref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(std::move(foo_ref));
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can reinterpret_cast it back to a reference to the derived class") {
+          cpl::uref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(std::move(foo_ref));
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can move it to a reference to a const") {
+        cpl::uref<const Bar> const_bar_ref{ std::move(bar_uref) };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can const_cast it back to a reference mutable") {
+          cpl::uref<Bar> cast_bar_ref = cpl::cast_const<Bar>(std::move(const_bar_ref));
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("constructing a uptr") {
+    REQUIRE(Foo::live_objects == 0);
+    THEN("we have a default constructor") {
+      cpl::uptr<Foo> default_ptr;
+      THEN("we can move it") {
+        default_ptr = std::move(default_ptr);
+      }
+    }
+    THEN("we can explicitly construct a nullptr") {
+      cpl::uptr<Foo> null_ptr(nullptr);
+      THEN("we can assign a nullptr to it") {
+        null_ptr = nullptr;
+      }
+    }
+    THEN("we can make unique data") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uptr<Bar> made_ptr = cpl::make_uptr<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can move it") {
+        cpl::uptr<Bar> moved_ptr = std::move(made_ptr);
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  /// Used for @ref MUST_NOT_COMPILE.
+  static cpl::uptr<Foo> s_foo_uptr;
+
+#ifdef MAKE_SFINAE_RESPOND_TO_DELETED_FUNCTIONS
+  /// Ensure there's no copying `cpl::uptr`.
+  MUST_NOT_COMPILE(Foo, cpl::uptr<Foo>{ s_foo_uptr }, "copying unique pointers");
+#endif // MAKE_SFINAE_RESPOND_TO_DELETED_FUNCTIONS
+
+  /// Ensure there's no assignment between `cpl::uptr`.
+  MUST_NOT_COMPILE(Foo, s_foo_uptr = s_foo_uptr, "assigning unique pointers");
+
+  TEST_CASE("casting a uptr") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a unique pointer to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::uptr<Bar> bar_uptr = cpl::make_uptr<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("if we move it to a pointer to a base class") {
+        cpl::uptr<Foo> foo_uptr{ std::move(bar_uptr) };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can static_cast it back to a pointer to the derived class") {
+          cpl::uptr<Bar> cast_bar_uptr = cpl::cast_static<Bar>(std::move(foo_uptr));
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can dynamic_cast it back to a pointer to the derived class") {
+          cpl::uptr<Bar> cast_bar_uptr = cpl::cast_dynamic<Bar>(std::move(foo_uptr));
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can reinterpret_cast it back to a pointer to the derived class") {
+          cpl::uptr<Bar> cast_bar_uptr = cpl::cast_dynamic<Bar>(std::move(foo_uptr));
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can move it to a pointer to a const") {
+        cpl::uptr<const Bar> const_bar_uptr{ std::move(bar_uptr) };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can const_cast it back to a pointer mutable") {
+          cpl::uptr<Bar> cast_bar_uptr = cpl::cast_const<Bar>(std::move(const_bar_uptr));
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
   TEST_CASE("constructing a ref") {
+    REQUIRE(Foo::live_objects == 0);
     GIVEN("raw data") {
       int foo = __LINE__;
       int bar = __LINE__;
       Bar raw_bar{ foo, bar };
+      REQUIRE(Foo::live_objects == 1);
       THEN("we can construct an unsafe reference to it") {
         cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
+        REQUIRE(Foo::live_objects == 1);
         THEN("we can use it to initialize another reference") {
           cpl::ref<Bar> bar_ref_copy{ bar_ref };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to another reference") {
             bar_ref_copy = bar_ref;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
         THEN("we can use it to initialize a reference to const") {
           cpl::ref<const Bar> const_bar_ref_copy{ bar_ref };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a reference to const") {
             const_bar_ref_copy = bar_ref;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
         THEN("we can use it to initialize a reference to a base class") {
           cpl::ref<Foo> foo_ref{ bar_ref };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a reference to a base class") {
             foo_ref = bar_ref;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
         THEN("we can use it to initialize a reference to a const base class") {
           cpl::ref<const Foo> const_foo_ref{ bar_ref };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a reference to a const base class") {
             const_foo_ref = bar_ref;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
       }
     }
+    REQUIRE(Foo::live_objects == 0);
     GIVEN("a null pointer") {
       cpl::ptr<Foo> null_foo_ptr;
       THEN("using to construct a reference will be " CPL_VARIANT) {
         REQUIRE_CPL_THROWS(cpl::ref<Foo>{ null_foo_ptr });
-      }
-    }
-  }
-
-  TEST_CASE("casting a ref") {
-    GIVEN("a borrowed reference to a derived class") {
-      int foo = __LINE__;
-      int bar = __LINE__;
-      Bar raw_bar{ foo, bar };
-      cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
-      THEN("if we use it to construct a reference to a base class") {
-        cpl::ref<Foo> foo_ref{ bar_ref };
-        THEN("we can static_cast it back to a reference to the derived class") {
-          cpl::ref<Bar> cast_bar_ref = cpl::cast_static<Bar>(foo_ref);
-        }
-        THEN("we can dynamic_cast it back to a reference to the derived class") {
-          cpl::ref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(foo_ref);
-        }
-        THEN("we can reinterpret_cast it back to a reference to the derived class") {
-          cpl::ref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(foo_ref);
-        }
-      }
-      THEN("we can use it to construct a reference to a const") {
-        cpl::ref<const Bar> const_bar_ref{ bar_ref };
-        THEN("we can const_cast it back to a reference mutable") {
-          cpl::ref<Bar> cast_bar_ref = cpl::cast_const<Bar>(const_bar_ref);
-        }
       }
     }
   }
@@ -238,7 +357,44 @@ namespace test {
   /// Ensure it is not possible to construct a `cpl::ref` to violate `const`-ness.
   MUST_NOT_COMPILE(Foo, cpl::ref<T>{ cpl::unsafe_ref<const Foo>(*(const Foo*)nullptr) }, "const violation reference construction");
 
+  TEST_CASE("casting a ref") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a borrowed reference to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      Bar raw_bar{ foo, bar };
+      cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("if we use it to construct a reference to a base class") {
+        cpl::ref<Foo> foo_ref{ bar_ref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can static_cast it back to a reference to the derived class") {
+          cpl::ref<Bar> cast_bar_ref = cpl::cast_static<Bar>(foo_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can dynamic_cast it back to a reference to the derived class") {
+          cpl::ref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(foo_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can reinterpret_cast it back to a reference to the derived class") {
+          cpl::ref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(foo_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can use it to construct a reference to a const") {
+        cpl::ref<const Bar> const_bar_ref{ bar_ref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can const_cast it back to a reference mutable") {
+          cpl::ref<Bar> cast_bar_ref = cpl::cast_const<Bar>(const_bar_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
   TEST_CASE("constructing a ptr") {
+    REQUIRE(Foo::live_objects == 0);
     THEN("we have a default constructor") {
       cpl::ptr<Foo> default_ptr;
       THEN("we can assign it") {
@@ -251,65 +407,50 @@ namespace test {
         null_ptr = nullptr;
       }
     }
+    REQUIRE(Foo::live_objects == 0);
     GIVEN("raw data") {
       int foo = __LINE__;
       int bar = __LINE__;
       Bar raw_bar{ foo, bar };
+      REQUIRE(Foo::live_objects == 1);
       THEN("we can construct an unsafe pointer to it") {
         cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
+        REQUIRE(Foo::live_objects == 1);
         THEN("we can use it to initialize another pointer") {
           cpl::ptr<Bar> bar_ptr_copy{ bar_ptr };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to another pointer") {
             bar_ptr_copy = bar_ptr;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
         THEN("we can use it to initialize a pointer to const") {
           cpl::ptr<const Bar> const_bar_ptr_copy{ bar_ptr };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a pointer to const") {
             const_bar_ptr_copy = bar_ptr;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
         THEN("we can use it to initialize a pointer to a base class") {
           cpl::ptr<Foo> foo_ptr{ bar_ptr };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a pointer to a base class") {
             foo_ptr = bar_ptr;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
         THEN("we can use it to initialize a pointer to a const base class") {
           cpl::ptr<const Foo> const_foo_ptr{ bar_ptr };
+          REQUIRE(Foo::live_objects == 1);
           THEN("we can assign it to a pointer to a const base class") {
             const_foo_ptr = bar_ptr;
+            REQUIRE(Foo::live_objects == 1);
           }
         }
       }
     }
-  }
-
-  TEST_CASE("casting ptr") {
-    GIVEN("a borrowed pointer to a derived class") {
-      int foo = __LINE__;
-      int bar = __LINE__;
-      Bar raw_bar{ foo, bar };
-      cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
-      THEN("if we use it to construct a pointer to a base class") {
-        cpl::ptr<Foo> foo_ptr{ bar_ptr };
-        THEN("we can static_cast it back to a pointer to the derived class") {
-          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_static<Bar>(foo_ptr);
-        }
-        THEN("we can dynamic_cast it back to a pointer to the derived class") {
-          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
-        }
-        THEN("we can reinterpret_cast it back to a pointer to the derived class") {
-          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
-        }
-      }
-      THEN("we can use it to construct a pointer to a const") {
-        cpl::ptr<const Bar> const_bar_ptr{ bar_ptr };
-        THEN("we can const_cast it back to a pointer mutable") {
-          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_const<Bar>(const_bar_ptr);
-        }
-      }
-    }
+    REQUIRE(Foo::live_objects == 0);
   }
 
   /// Ensure it is not possible to construct a `cpl::ptr` from a raw pointer.
@@ -324,58 +465,112 @@ namespace test {
   /// Ensure it is not possible to construct a `cpl::ptr` to violate `const`-ness.
   MUST_NOT_COMPILE(Foo, cpl::ptr<T>{ cpl::ptr<const Foo>() }, "const violation pointer construction");
 
-  TEST_CASE("converting a ref to a ptr") {
-    GIVEN("a borrowed reference to a derived class") {
-      int foo = __LINE__;
-      int bar = __LINE__;
-      Bar raw_bar{ foo, bar };
-      cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
-      THEN("we can use it to construct a pointer") {
-        cpl::ptr<Bar> bar_ptr{ bar_ref };
-        THEN("we can assign it to a pointer") {
-          bar_ptr = bar_ref;
-        }
-      }
-      THEN("we can use it to construct a pointer to const") {
-        cpl::ptr<const Bar> const_bar_ptr{ bar_ref };
-        THEN("we can assign it to a pointer to const") {
-          const_bar_ptr = bar_ref;
-        }
-      }
-      THEN("we can use it to construct a pointer to the base class") {
-        cpl::ptr<Foo> foo_ptr{ bar_ref };
-        THEN("we can assign it to a pointer to the base class") {
-          foo_ptr = bar_ref;
-        }
-      }
-      THEN("we can use it to construct a pointer to a const base class") {
-        cpl::ptr<const Foo> const_foo_ptr{ bar_ref };
-        THEN("we can assign it to a pointer to a const base class") {
-          const_foo_ptr = bar_ref;
-        }
-      }
-    }
-  }
-
-  TEST_CASE("converting a ptr to a ref") {
+  TEST_CASE("casting a ptr") {
+    REQUIRE(Foo::live_objects == 0);
     GIVEN("a borrowed pointer to a derived class") {
       int foo = __LINE__;
       int bar = __LINE__;
       Bar raw_bar{ foo, bar };
       cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("if we use it to construct a pointer to a base class") {
+        cpl::ptr<Foo> foo_ptr{ bar_ptr };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can static_cast it back to a pointer to the derived class") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_static<Bar>(foo_ptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can dynamic_cast it back to a pointer to the derived class") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can reinterpret_cast it back to a pointer to the derived class") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can use it to construct a pointer to a const") {
+        cpl::ptr<const Bar> const_bar_ptr{ bar_ptr };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can const_cast it back to a pointer mutable") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_const<Bar>(const_bar_ptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("converting a ref to a ptr") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a borrowed reference to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      Bar raw_bar{ foo, bar };
+      cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can use it to construct a pointer") {
+        cpl::ptr<Bar> bar_ptr{ bar_ref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can assign it to a pointer") {
+          bar_ptr = bar_ref;
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can use it to construct a pointer to const") {
+        cpl::ptr<const Bar> const_bar_ptr{ bar_ref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can assign it to a pointer to const") {
+          const_bar_ptr = bar_ref;
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can use it to construct a pointer to the base class") {
+        cpl::ptr<Foo> foo_ptr{ bar_ref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can assign it to a pointer to the base class") {
+          foo_ptr = bar_ref;
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can use it to construct a pointer to a const base class") {
+        cpl::ptr<const Foo> const_foo_ptr{ bar_ref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can assign it to a pointer to a const base class") {
+          const_foo_ptr = bar_ref;
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("converting a ptr to a ref") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a borrowed pointer to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      Bar raw_bar{ foo, bar };
+      cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
+      REQUIRE(Foo::live_objects == 1);
       THEN("we can use it to construct a reference") {
         cpl::ref<Bar> bar_ref{ bar_ptr };
+        REQUIRE(Foo::live_objects == 1);
       }
       THEN("we can use it to construct a reference to const") {
         cpl::ref<const Bar> const_bar_ref{ bar_ptr };
+        REQUIRE(Foo::live_objects == 1);
       }
       THEN("we can use it to construct a reference to the base class") {
         cpl::ref<Foo> foo_ref{ bar_ptr };
+        REQUIRE(Foo::live_objects == 1);
       }
       THEN("we can use it to construct a reference to a const base class") {
         cpl::ref<const Foo> const_foo_ref{ bar_ptr };
+        REQUIRE(Foo::live_objects == 1);
       }
     }
+    REQUIRE(Foo::live_objects == 0);
   }
 
   /// Used for @ref MUST_NOT_COMPILE.
