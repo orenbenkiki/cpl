@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.3"
+#define CPL_VERSION "0.0.4"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
