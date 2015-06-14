@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0-dirty"
+#define CPL_VERSION "0.0.1"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -113,27 +113,17 @@ SOFTWARE.
 ///
 /// CPL provides the following set of types:
 ///
-/// | Type           | May be null? | Data lifetime is as long as        | Fast
-/// implementation is based on  |
-/// | -------------- | ------------ | ---------------------------------- |
-/// -------------------------------  |
-/// | `cpl::is<T>`   | No           | The `opt` exists and is not reset  | `T` |
-/// | `cpl::opt<T>`  | Yes          | The `is` exists                    |
-/// `std::experimental::optional<T>` |
-/// | `cpl::uref<T>` | No           | The `uref` exists                  |
-/// `std::unique_ptr<T>`             |
-/// | `cpl::uptr<T>` | Yes          | The `uptr` exists and is not reset |
-/// `std::unique_ptr<T>`             |
-/// | `cpl::sref<T>` | No           | The `sref` exists                  |
-/// `std::shared_ptr<T>`             |
-/// | `cpl::sptr<T>` | Yes          | The `sptr` exists                  |
-/// `std::shared_ptr<T>`             |
-/// | `cpl::wptr<T>` | Yes          | Some `sptr` exists                 |
-/// `std::weak_ptr<T>`               |
-/// | `cpl::ref<T>`  | No           | Someone else holds the data        |
-/// `std::reference_wrapper`         |
-/// | `cpl::ptr<T>`  | Yes          | Someone else holds the data        | `T*`
-/// |
+/// | Type           | May be null? | Data lifetime is as long as        | Fast implementation is based on  |
+/// | -------------- | ------------ | ---------------------------------- | -------------------------------  |
+/// | `cpl::is<T>`   | No           | The `opt` exists and is not reset  | `T`                              |
+/// | `cpl::opt<T>`  | Yes          | The `is` exists                    | `std::experimental::optional<T>` |
+/// | `cpl::uref<T>` | No           | The `uref` exists                  | `std::unique_ptr<T>`             |
+/// | `cpl::uptr<T>` | Yes          | The `uptr` exists and is not reset | `std::unique_ptr<T>`             |
+/// | `cpl::sref<T>` | No           | The `sref` exists                  | `std::shared_ptr<T>`             |
+/// | `cpl::sptr<T>` | Yes          | The `sptr` exists                  | `std::shared_ptr<T>`             |
+/// | `cpl::wptr<T>` | Yes          | Some `sptr` exists                 | `std::weak_ptr<T>`               |
+/// | `cpl::ref<T>`  | No           | Someone else holds the data        | `std::reference_wrapper`         |
+/// | `cpl::ptr<T>`  | Yes          | Someone else holds the data        | `T*`                             |
 ///
 /// ## Implementation
 ///
@@ -166,6 +156,19 @@ SOFTWARE.
 /// references seems strange, but as long as we can't override `operator.` then
 /// this is the only way to get convenient access to the data members of the
 /// value being referred to.
+///
+/// ## Casting
+///
+/// The `cpl::cast_clever` function works similarly to `std::dynamic_cast`, but
+/// it is faster since it assumes that the pointer value does not change (this
+/// assumption is checked in safe mode, of course).
+///
+/// If you are using virtual base classes etc. you'll need to use the real
+/// `cpl::cast_dynamic` function. CPL also provides the `cpl::cast_const`
+/// and `cpl::cast_reinterpret` functions.
+///
+/// The names are all reversed since the normal names are keywords making them
+/// impossible to use as function names.
 ///
 /// ## Guidelines
 ///
@@ -221,9 +224,18 @@ SOFTWARE.
 namespace cpl {
   /// Implement the fast (unsafe) variant of the clever protection library
   /// (CPL).
+  ///
+  /// This namespace only exists in Doxygen's imagination. In reality we
+  /// compile the correct variant directly into the @ref cpl namespace. Using
+  /// a fake nested namespace allows us to document both variants together.
   namespace fast {};
+
   /// Implement the safe (slow) variant of the clever protection library
   /// (CPL).
+  ///
+  /// This namespace only exists in Doxygen's imagination. In reality we
+  /// compile the correct variant directly into the @ref cpl namespace. Using
+  /// a fake nested namespace allows us to document both variants together.
   namespace safe {};
 };
 
@@ -242,9 +254,8 @@ namespace cpl {
 
 #else // DOXYGEN
 
-// Allow using `cpl::foo` to access either `cpl::safe::foo` or `cpl::fast::foo`
-// depending on which of @ref CPL_FAST or @ref CPL_SAFE were defined, and
-// define @ref CPL_VARIANT accordingly.
+// Ensure one of @ref CPL_FAST or @ref CPL_SAFE are defined, and configure the
+// @ref CPL_VARIANT accordingly.
 
 #ifdef CPL_FAST
 
@@ -254,19 +265,10 @@ namespace cpl {
 
 #define CPL_VARIANT "fast"
 
-namespace cpl {
-  namespace fast {};
-  using namespace fast;
-};
-
 #else // CPL_FAST
 
 #ifdef CPL_SAFE
 #define CPL_VARIANT "safe"
-namespace cpl {
-  namespace safe {};
-  using namespace safe;
-}
 #else // CPL_SAFE
 #error "No CPL variant chosen - neither CPL_FAST nor CPL_SAFE are defined"
 #endif // CPL_SAFE
@@ -288,9 +290,270 @@ namespace cpl {
 #endif // CPL_ASSERT
 
 namespace cpl {
-  namespace fast {}
 
-  namespace safe {}
+  /// An additional parameter for unsafe raw pointer operations.
+  ///
+  /// This allows us to use @ref MUST_NOT_COMPILE for verifying unsafe
+  /// constructions are indeed forbidden.
+  enum unsafe_raw_t {};
+
+  /// An additional parameter for unsafe static cast operations.
+  ///
+  /// This allows us to use @ref MUST_NOT_COMPILE for verifying unsafe
+  /// constructions are indeed forbidden.
+  enum unsafe_static_t {};
+
+  /// An additional parameter for unsafe dynamic cast operations.
+  ///
+  /// This allows us to use @ref MUST_NOT_COMPILE for verifying unsafe
+  /// constructions are indeed forbidden.
+  enum unsafe_dynamic_t {};
+
+  /// An additional parameter for unsafe const cast operations.
+  ///
+  /// This allows us to use @ref MUST_NOT_COMPILE for verifying unsafe
+  /// constructions are indeed forbidden.
+  enum unsafe_const_t {};
+
+#ifdef DOXYGEN
+  namespace fast {
+#endif // DOXYGEN
+
+#if defined(DOXYGEN) || defined(CPL_FAST)
+    /// A fast (unsafe) pointer for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ptr {
+      /// The raw pointer to the value.
+      T* m_raw_ptr;
+
+    public:
+      /// Unsafe construction from a raw pointer.
+      ptr(T* raw_ptr, unsafe_raw_t) : m_raw_ptr(raw_ptr) {
+      }
+
+      /// Unsafe construction from a different type of pointer.
+      template <typename U> ptr(ptr<U> other, unsafe_raw_t) : m_raw_ptr(reinterpret_cast<T*>(other.get())) {
+      }
+
+      /// Unsafe construction from a different type of pointer.
+      template <typename U> ptr(ptr<U> other, unsafe_static_t) : m_raw_ptr(static_cast<T*>(other.get())) {
+      }
+
+      /// Unsafe construction from a different type of pointer.
+      template <typename U> ptr(ptr<U> other, unsafe_dynamic_t) : m_raw_ptr(dynamic_cast<T*>(other.get())) {
+      }
+
+      /// Unsafe construction from a different type of pointer.
+      template <typename U> ptr(ptr<U> other, unsafe_const_t) : m_raw_ptr(const_cast<T*>(other.get())) {
+      }
+
+      /// Deterministic null default constructor.
+      ///
+      /// This is slower from the `T*` default constructor, for sanity.
+      ptr() : m_raw_ptr(nullptr) {
+      }
+
+      /// Explicit null constructor.
+      ptr(nullptr_t) : ptr() {
+      }
+
+      /// Copy a pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      ptr(ptr<U> other)
+        : m_raw_ptr(other.get()) {
+      }
+
+      /// Access the raw pointer.
+      T* get() const {
+        return m_raw_ptr;
+      }
+    };
+#endif // DOXYGEN || CPL_FAST
+
+#ifdef DOXYGEN
+  }
+
+  namespace safe {
+#endif // DOXYGEN
+
+#if defined(DOXYGEN) || defined(CPL_SAFE)
+    /// A `Deleter` that doesn't delete the object.
+    ///
+    /// We use this for the `std::shared_ptr` we attach to local data to ensure
+    /// there are no dangling pointers when it is destroyed.
+    template <typename T> struct no_delete {
+      /// Default constructor.
+      no_delete() noexcept = default;
+
+      /// Copy constructor.
+      template <typename U> no_delete(const no_delete<U>&) noexcept {
+      }
+
+      /// (Do not) delete the given pointer.
+      void operator()(T*) const noexcept {
+      }
+    };
+
+    /// Cast the shared pointer of a `ptr` of a different type.
+    template <typename T, typename U> static std::shared_ptr<T> cast_shared_ptr(const std::shared_ptr<U>& other, unsafe_raw_t) {
+      typedef typename std::shared_ptr<T>::element_type E;
+      E* other_raw = reinterpret_cast<E*>(other.get());
+      return std::shared_ptr<T>(other, other_raw);
+    }
+
+    /// Cast the shared pointer of a `ptr` of a different type.
+    template <typename T, typename U> static std::shared_ptr<T> cast_shared_ptr(const std::shared_ptr<U>& other, unsafe_static_t) {
+      typedef typename std::shared_ptr<T>::element_type E;
+      E* other_raw = static_cast<E*>(other.get());
+      return std::shared_ptr<T>(other, other_raw);
+    }
+
+    /// Cast the shared pointer of a `ptr` of a different type.
+    template <typename T, typename U> static std::shared_ptr<T> cast_shared_ptr(const std::shared_ptr<U>& other, unsafe_dynamic_t) {
+      typedef typename std::shared_ptr<T>::element_type E;
+      E* other_raw = dynamic_cast<E*>(other.get());
+      return std::shared_ptr<T>(other, other_raw);
+    }
+
+    /// Cast the shared pointer of a `ptr` of a different type.
+    template <typename T, typename U> static std::shared_ptr<T> cast_shared_ptr(const std::shared_ptr<U>& other, unsafe_const_t) {
+      typedef typename std::shared_ptr<T>::element_type E;
+      E* other_raw = const_cast<E*>(other.get());
+      return std::shared_ptr<T>(other, other_raw);
+    }
+
+    /// Cast the weak pointer of a `ptr` of a different type.
+    template <typename T, typename U, typename C>
+    std::weak_ptr<T> cast_weak_ptr(const std::shared_ptr<T>& into_unsafe_ptr, const std::weak_ptr<U>& from_weak_ptr, C cast_type) {
+      if (into_unsafe_ptr) {
+        return into_unsafe_ptr;
+      } else {
+        return cast_shared_ptr<T>(from_weak_ptr.lock(), cast_type);
+      }
+    }
+
+    /// A safe (slow) pointer for data whose lifetime is determined
+    /// elsewhere.
+    template <typename T> class ptr {
+      template <typename U> friend class ptr;
+
+      /// If we hold a pointer created by `unsafe_ptr`, then this will
+      /// provide a lifetime to `m_weak_ptr`.
+      std::shared_ptr<T> m_unsafe_ptr;
+
+      /// A weak pointer to the track the lifetime of the data.
+      std::weak_ptr<T> m_weak_ptr;
+
+    public:
+      /// Unsafe construction from a raw pointer.
+      ptr(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()) {
+      }
+
+      /// Unsafe construction from a different type of pointer.
+      template <typename U, typename C>
+      ptr(const ptr<U>& other, C cast_type)
+        : m_unsafe_ptr(cast_shared_ptr<T, U>(other.m_unsafe_ptr, cast_type)),
+          m_weak_ptr(cast_weak_ptr(m_unsafe_ptr, other.m_weak_ptr, cast_type)) {
+      }
+
+      /// Deterministic null default constructor.
+      ptr() : m_unsafe_ptr(), m_weak_ptr() {
+      }
+
+      /// Explicit null constructor.
+      ptr(nullptr_t) : ptr() {
+      }
+
+      /// Copy a pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      ptr(const ptr<U>& other)
+        : m_unsafe_ptr(other.m_unsafe_ptr ? std::shared_ptr<T>(other.m_unsafe_ptr.get(), no_delete<T>())
+                                          : std::shared_ptr<T>(nullptr)),
+          m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock()) {
+      }
+
+      /// Access the raw pointer.
+      ///
+      /// This isn't as safe as we'd like it to be, since another thread may
+      /// delete the value between the time we `return` and the time the caller
+      /// uses the value.
+      T* get() const {
+        return m_weak_ptr.lock().get();
+      }
+    };
+
+#endif // DOXYGEN || CPL_SAFE
+
+#ifdef DOXYGEN
+  }
+#endif // DOXYGEN
+
+  /// @file
+  /// Implement the unsafe creation of pointers and references.inters and
+  /// references.
+
+  /// Create an unsafe pointer to raw data.
+  ///
+  /// This is playing with fire. It is OK if the data is static, but there's
+  /// no way to ask the compiler to ensure that.
+  template <typename T> ptr<T> unsafe_ptr(T& data) {
+    return ptr<T>{ &data, unsafe_raw_t(0) };
+  }
+
+#ifdef DOXYGEN
+  namespace fast {
+#endif // DOXYGEN
+
+#if defined(DOXYGEN) || defined(CPL_FAST)
+    /// A static cast between pointer types.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    ptr<T> cast_static(ptr<U> from_ptr) {
+      return ptr<T>{ from_ptr, unsafe_static_t(0) };
+    }
+#endif // DOXYGEN || CPL_FAST
+
+#ifdef DOXYGEN
+  }
+
+  namespace safe {
+#endif // DOXYGEN
+
+#if defined(DOXYGEN) || defined(CPL_SAFE)
+    /// Static cast between related pointer types.
+    ///
+    /// This verifies that the pointer value did not change, which will
+    /// always be true unless you use virtual base classes.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    ptr<T> cast_static(ptr<U> from_ptr) {
+      U* from_raw = from_ptr.get();
+      T* to_dynamic = dynamic_cast<T*>(from_raw);
+      T* to_raw = static_cast<T*>(from_raw);
+      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+      return ptr<T>{ from_ptr, unsafe_raw_t(0) };
+    }
+#endif // DOXYGEN || CPL_SAFE
+
+#ifdef DOXYGEN
+  }
+#endif // DOXYGEN
+
+  /// A reinterpret cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  ptr<T> cast_reinterpret(ptr<U> from_ptr) {
+    return ptr<T>{ from_ptr, unsafe_raw_t(0) };
+  }
+
+  /// A dynamic cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  ptr<T> cast_dynamic(ptr<U> from_ptr) {
+    return ptr<T>{ from_ptr, unsafe_dynamic_t(0) };
+  }
+
+  /// A const cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  ptr<T> cast_const(ptr<U> from_ptr) {
+    return ptr<T>{ from_ptr, unsafe_const_t(0) };
+  }
 
 #ifndef CPL_WITHOUT_COLLECTIONS
 

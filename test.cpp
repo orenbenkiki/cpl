@@ -92,10 +92,10 @@ namespace test {
     /// TRICKY: Also change the value of the `foo` member so any dangling
     /// pointers will see the wrong value. We _hope_ such access won't fault -
     /// it will be flagged by memory corruption tools.
-    ~Foo() {
+    virtual ~Foo() {
       if (foo >= 0) {
         --live_objects;
-        foo = 0;
+        foo = -1;
       }
     }
 
@@ -112,6 +112,25 @@ namespace test {
 
   int Foo::live_objects = 0;
 
+  /// A sub-class to test conversions.
+  struct Bar : Foo {
+    /// Hold more meaningless data.
+    int bar;
+
+    /// Make the default constructor deterministic.
+    Bar() : Bar(0, 0) {
+    }
+
+    /// Allow constructing different instances for the tests.
+    explicit Bar(int foo, int bar) : Foo(foo), bar(bar) {
+    }
+
+    /// Change the value of `bar` to help detect dangling pointers.
+    ~Bar() {
+      bar = -1;
+    }
+  };
+
   /// Test the @ref MUST_NOT_COMPILE macro.
   MUST_NOT_COMPILE(Foo, T("string"), "Invalid constructor parameter");
 
@@ -120,16 +139,78 @@ namespace test {
 #ifdef CPL_FAST
     GIVEN("the fast variant is compiled") {
       THEN("CPL_VARIANT will be defined to \"fast\"") {
-        REQUIRE(std::string(CPL_VARIANT) == "fast");
+        REQUIRE(cpl::string(CPL_VARIANT) == "fast");
       }
     }
 #endif
 #ifdef CPL_SAFE
     GIVEN("the safe variant is compiled") {
       THEN("CPL_VARIANT will be defined to \"safe\"") {
-        REQUIRE(std::string(CPL_VARIANT) == "safe");
+        REQUIRE(cpl::string(CPL_VARIANT) == "safe");
       }
     }
 #endif
   }
+
+  TEST_CASE("constructing a ptr") {
+    THEN("we have a default constructor") {
+      cpl::ptr<Foo> default_ptr;
+    }
+    THEN("we can explicitly construct a nullptr") {
+      cpl::ptr<Foo> null_ptr{ nullptr };
+    }
+    GIVEN("raw data") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      Bar raw_bar{ foo, bar };
+      THEN("we can construct an unsafe pointer to it") {
+        cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
+        THEN("we can use it to initialize another pointer") {
+          cpl::ptr<Bar> bar_ptr_copy{ bar_ptr };
+        }
+        THEN("we can use it to initialize a pointer to a base class") {
+          cpl::ptr<Foo> foo_ptr{ bar_ptr };
+        }
+      }
+    }
+  }
+
+  TEST_CASE("casting ptr") {
+    GIVEN("a borrowed pointer to a const derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      Bar raw_bar{ foo, bar };
+      cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
+      THEN("if we view it as a pointer to a base class") {
+        cpl::ptr<Foo> foo_ptr{ bar_ptr };
+        THEN("we can static_cast it back to a pointer to the derived class") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_static<Bar>(foo_ptr);
+        }
+        THEN("we can dynamic_cast it back to a pointer to the derived class") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
+        }
+        THEN("we can reinterpret_cast it back to a pointer to the derived class") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_dynamic<Bar>(foo_ptr);
+        }
+      }
+      THEN("we can view it as a pointer to a const") {
+        cpl::ptr<const Bar> const_bar_ptr{ bar_ptr };
+        THEN("we can const_cast it back to a pointer mutable") {
+          cpl::ptr<Bar> cast_bar_ptr = cpl::cast_const<Bar>(const_bar_ptr);
+        }
+      }
+    }
+  }
+
+  /// Ensure it is not possible to construct a `cpl::ptr` from a raw pointer.
+  MUST_NOT_COMPILE(Foo, cpl::ptr<T>{(T*)nullptr }, "unsafe pointer construction");
+
+  /// Ensure it is not possible to construct a `cpl::ptr` to an unrelated type.
+  MUST_NOT_COMPILE(Foo, cpl::ptr<T>{ cpl::ptr<int>() }, "unrelated pointer construction");
+
+  /// Ensure it is not possible to construct a `cpl::ptr` to a sub-class.
+  MUST_NOT_COMPILE(Bar, cpl::ptr<T>{ cpl::ptr<Foo>() }, "sub-class pointer construction");
+
+  /// Ensure it is not possible to construct a `cpl::ptr` to violate `const`-ness.
+  MUST_NOT_COMPILE(Foo, cpl::ptr<T>{ cpl::ptr<const Foo>() }, "const violation pointer construction");
 }

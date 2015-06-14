@@ -42,10 +42,10 @@ bin:
 	mkdir -p bin
 
 bin/test.fast: test.cpp cpl.hpp | src bin
-	$(COMPILE) -DCPL_FAST -I$(CATCH_INCLUDE_DIR) -o $@ $<
+	$(COMPILE) -DCPL_FAST -Iinclude -I$(CATCH_INCLUDE_DIR) -o $@ $<
 
 bin/test.safe: test.cpp cpl.hpp | src bin
-	$(COMPILE) -DCPL_SAFE -I$(CATCH_INCLUDE_DIR) -o $@ $<
+	$(COMPILE) -DCPL_SAFE -Iinclude -I$(CATCH_INCLUDE_DIR) -o $@ $<
 
 bin/.tested.fast: bin/test.fast
 	$<
