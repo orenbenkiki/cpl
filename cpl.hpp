@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.9"
+#define CPL_VERSION "0.0.10"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -360,23 +360,18 @@ namespace cpl {
 
 #if defined(DOXYGEN) || defined(CPL_FAST)
     /// A fast (unsafe) indirection that deletes the data when it is deleted.
-    template <typename T> class unique {
+    template <typename T> class unique : public std::unique_ptr<T> {
       template <typename U> friend class unique;
-      template <typename U> friend class borrow;
-
-    protected:
-      /// The wrapped unique pointer.
-      std::unique_ptr<T> m_unique_ptr;
 
     public:
       /// Unsafe construction from a raw pointer.
-      inline unique(T* raw_ptr, unsafe_raw_t) : m_unique_ptr(raw_ptr) {
+      inline unique(T* raw_ptr, unsafe_raw_t) : std::unique_ptr<T>(raw_ptr) {
       }
 
       /// Cast construction from a different type of unique indirection.
       template <typename U, typename C>
       inline unique(unique<U>&& other, C cast_type)
-        : m_unique_ptr(cast_unique_ptr<T, U>(std::move(other.m_unique_ptr), cast_type)) {
+        : std::unique_ptr<T>(cast_unique_ptr<T, U>(std::move(other), cast_type)) {
       }
 
       /// Forbid copy construction.
@@ -385,13 +380,13 @@ namespace cpl {
       /// Take ownership from another unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline unique(unique<U>&& other)
-        : m_unique_ptr(std::move(other.m_unique_ptr)) {
+        : std::unique_ptr<T>(std::move(other)) {
       }
 
       /// Take ownership from another unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline const unique<T>& operator=(unique<U>&& other) {
-        m_unique_ptr = std::move(other.m_unique_ptr);
+        std::unique_ptr<T>::operator=(std::move(other));
       }
     };
 
@@ -407,11 +402,6 @@ namespace cpl {
 
       /// Explicit null constructor.
       inline uptr(nullptr_t) : uptr() {
-      }
-
-      /// Access the raw pointer.
-      inline T* get() const {
-        return unique<T>::m_unique_ptr.get();
       }
     };
 
@@ -445,12 +435,12 @@ namespace cpl {
 
       /// Access the raw pointer.
       inline const T* get() const {
-        return unique<T>::m_unique_ptr.get();
+        return unique<T>::get();
       }
 
       /// Access the raw pointer.
       inline T* get() {
-        return unique<T>::m_unique_ptr.get();
+        return unique<T>::get();
       }
     };
 
@@ -493,7 +483,7 @@ namespace cpl {
       /// Construction from a unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline borrow(const unique<U>& other)
-        : m_raw_ptr(other.m_unique_ptr.get()) {
+        : m_raw_ptr(other.get()) {
       }
     };
 
@@ -603,26 +593,23 @@ namespace cpl {
     }
 
     /// A safe (slow) indirection that deletes the data when it is deleted.
-    template <typename T> class unique {
+    template <typename T> class unique : public std::unique_ptr<T> {
       template <typename U> friend class unique;
       template <typename U> friend class borrow;
 
     protected:
-      /// The wrapped unique pointer.
-      std::unique_ptr<T> m_unique_ptr;
-
       /// Track the lifetime of the data.
       std::shared_ptr<T> m_shared_ptr;
 
     public:
       /// Unsafe construction from a raw pointer.
-      inline unique(T* raw_ptr, unsafe_raw_t) : m_unique_ptr(raw_ptr), m_shared_ptr(raw_ptr, no_delete<T>()) {
+      inline unique(T* raw_ptr, unsafe_raw_t) : std::unique_ptr<T>(raw_ptr), m_shared_ptr(raw_ptr, no_delete<T>()) {
       }
 
       /// Cast construction from a different type of unique indirection.
       template <typename U, typename C>
       inline unique(unique<U>&& other, C cast_type)
-        : m_unique_ptr(cast_unique_ptr<T, U>(std::move(other.m_unique_ptr), cast_type)),
+        : std::unique_ptr<T>(cast_unique_ptr<T, U>(std::move(other), cast_type)),
           m_shared_ptr(cast_shared_ptr<T, U>(std::move(other.m_shared_ptr), cast_type)) {
       }
 
@@ -632,13 +619,13 @@ namespace cpl {
       /// Take ownership from another unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline unique(unique<U>&& other)
-        : m_unique_ptr(std::move(other.m_unique_ptr)), m_shared_ptr(std::move(other.m_shared_ptr)) {
+        : std::unique_ptr<T>(std::move(other)), m_shared_ptr(std::move(other.m_shared_ptr)) {
       }
 
       /// Take ownership from another unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline const unique<T>& operator=(unique<U>&& other) {
-        m_unique_ptr = std::move(other.m_unique_ptr);
+        std::unique_ptr<T>::operator=(std::move(other));
         m_shared_ptr = std::move(other.m_shared_ptr);
       }
     };
@@ -655,11 +642,6 @@ namespace cpl {
       /// Explicit null constructor.
       inline uptr(nullptr_t) : uptr() {
       }
-
-      /// Access the raw pointer.
-      inline T* get() const {
-        return unique<T>::m_unique_ptr.get();
-      }
     };
 
     /// A safe (slow) reference that deletes the data when it is deleted.
@@ -672,38 +654,38 @@ namespace cpl {
     public:
       /// Unsafe construction from a raw pointer.
       inline uref(T* raw_ptr, unsafe_raw_t) : unique<T>(raw_ptr, unsafe_raw_t(0)) {
-        CPL_ASSERT(unique<T>::m_unique_ptr, "constructing a null reference");
+        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
       }
 
       /// Cast construction from a different type of unique reference.
       template <typename U, typename C> inline uref(unique<U>&& other, C cast_type) : unique<T>(std::move(other), cast_type) {
-        CPL_ASSERT(unique<T>::m_unique_ptr, "constructing a null reference");
+        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
       }
 
       /// Take ownership from another unique reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline uref(uref<U>&& other)
         : unique<T>(std::move(other)) {
-        CPL_ASSERT(unique<T>::m_unique_ptr, "constructing a null reference");
+        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
       }
 
       /// Take ownership from another unique pointer.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       explicit inline uref(uptr<U>&& other)
         : unique<T>(std::move(other)) {
-        CPL_ASSERT(unique<T>::m_unique_ptr, "constructing a null reference");
+        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
       }
 
       /// Access the raw pointer.
       inline const T* get() const {
-        const T* raw_ptr = unique<T>::m_unique_ptr.get();
+        const T* raw_ptr = unique<T>::get();
         CPL_ASSERT(raw_ptr, "accessing a null reference");
         return raw_ptr;
       }
 
       /// Access the raw pointer.
       inline T* get() {
-        T* raw_ptr = unique<T>::m_unique_ptr.get();
+        T* raw_ptr = unique<T>::get();
         CPL_ASSERT(raw_ptr, "accessing a null reference");
         return raw_ptr;
       }
