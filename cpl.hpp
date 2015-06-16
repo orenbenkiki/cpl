@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.11"
+#define CPL_VERSION "0.0.12"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -429,6 +429,23 @@ namespace cpl {
 #endif // DOXYGEN
 
 #if defined(DOXYGEN) || defined(CPL_FAST)
+    /// A fast (unsafe) holder of some value.
+    template <typename T> class is {
+    protected:
+      /// The held value.
+      T m_value;
+
+    public:
+      /// Reuse the held value constructors.
+      template <typename... Args> inline is(Args&&... args) : m_value(std::forward<Args>(args)...) {
+      }
+
+      /// Access the raw pointer.
+      inline T* get() {
+        return &m_value;
+      }
+    };
+
     /// A fast (unsafe) indirection that deletes the data when it is deleted.
     template <typename T> class unique : public std::unique_ptr<T> {
       template <typename U> friend class unique;
@@ -550,6 +567,12 @@ namespace cpl {
         : m_raw_ptr(other.m_raw_ptr) {
       }
 
+      /// Construction from a held value.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline borrow(is<U>& other)
+        : m_raw_ptr(other.get()) {
+      }
+
       /// Construction from a shared indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline borrow(const shared<U>& other)
@@ -606,6 +629,12 @@ namespace cpl {
       /// Copy a pointer.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       explicit inline ref(const ptr<U>& other)
+        : borrow<T>(other) {
+      }
+
+      /// Construct from a held value.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref(is<U>& other)
         : borrow<T>(other) {
       }
 
@@ -679,6 +708,30 @@ namespace cpl {
         return cast_shared_ptr<T>(from_weak_ptr.lock(), cast_type);
       }
     }
+
+    /// A fast (unsafe) holder of some value.
+    template <typename T> class is {
+      template <typename U> friend class borrow;
+
+    protected:
+      /// The held value.
+      T m_value;
+
+      /// Track the lifetime of the data.
+      std::shared_ptr<T> m_shared_ptr;
+
+    public:
+      /// Reuse the held value constructors.
+      template <typename... Args>
+      inline is(Args&&... args)
+        : m_value(std::forward<Args>(args)...), m_shared_ptr(&m_value, no_delete<T>()) {
+      }
+
+      /// Access the raw pointer.
+      inline T* get() {
+        return &m_value;
+      }
+    };
 
     /// A safe (slow) indirection that deletes the data when it is deleted.
     template <typename T> class unique : public std::unique_ptr<T> {
@@ -812,6 +865,12 @@ namespace cpl {
           m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock()) {
       }
 
+      /// Construction from a held value.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline borrow(is<U>& other)
+        : m_unsafe_ptr(), m_weak_ptr(other.m_shared_ptr) {
+      }
+
       /// Construction from a unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline borrow(const unique<U>& other)
@@ -875,6 +934,12 @@ namespace cpl {
       explicit inline ref(const ptr<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Construct from a held value.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref(is<U>& other)
+        : borrow<T>(other) {
       }
 
       /// Copy a shared reference.

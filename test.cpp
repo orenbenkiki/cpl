@@ -911,6 +911,53 @@ namespace test {
     REQUIRE(Foo::live_objects == 0);
   }
 
+  TEST_CASE("borrowing a held value") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("we have a helpd reference") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::is<Bar> bar_is{ foo, bar };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr{ bar_is };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr;
+        bar_ptr = bar_is;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr{ bar_is };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr;
+        bar_ptr = bar_is;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref{ bar_is };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(*bar_is.get());
+        bar_ref = bar_is;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref{ bar_is };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(*bar_is.get());
+        bar_ref = bar_is;
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
   TEST_CASE("borrowing a shared indirection") {
     REQUIRE(Foo::live_objects == 0);
     GIVEN("we have a shared reference") {
