@@ -31,34 +31,90 @@ SOFTWARE.
 
 #include <experimental/optional>
 
-#ifndef CPL_WITHOUT_COLLECTIONS
+#ifndef CPL_WITHOUT_COLLECTIONS // {
 
-#ifdef CPL_FAST
+#ifdef CPL_FAST // {
 #include <bitset>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#endif // CPL_FAST
+#endif // } CPL_FAST
 
-#ifdef CPL_SAFE
+#ifdef CPL_SAFE // {
 #include <debug/bitset>
 #include <debug/map>
 #include <debug/set>
 #include <debug/string>
 #include <debug/vector>
-#endif // CPL_SAFE
+#endif // } CPL_SAFE
 
-#endif // CPL_WITHOUT_COLLECTIONS
+#endif // } CPL_WITHOUT_COLLECTIONS
 
 /// The Git-derived version number.
 ///
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.13"
+#define CPL_VERSION "0.0.14"
 
-#ifdef DOXYGEN
+#ifdef DOXYGEN // {
+
+/// The name of the CPL variant we are compiling
+#define CPL_VARIANT
+
+/// If this is defined, the fast (unsafe) variant will be compiled.
+#define CPL_FAST
+
+/// If this is defined, the safe (slow) variant will be compiled.
+#define CPL_SAFE
+
+/// If this is defined, do not provide the `cpl` version of the standard
+/// collections, and do not even include their header files.
+#define CPL_WITHOUT_COLLECTIONS
+
+#else // } DOXYGEN {
+
+// Ensure one of @ref CPL_FAST or @ref CPL_SAFE are defined, and configure the
+// @ref CPL_VARIANT accordingly.
+
+#ifdef CPL_FAST // {
+
+#ifdef CPL_SAFE // {
+#error "Both CPL_FAST and CPL_SAFE are defined"
+#endif // } CPL_SAFE
+
+#define CPL_VARIANT "fast"
+
+#else // } CPL_FAST {
+
+#ifdef CPL_SAFE // {
+#define CPL_VARIANT "safe"
+#else // } CPL_SAFE {
+#error "No CPL variant chosen - neither CPL_FAST nor CPL_SAFE are defined"
+#endif // } CPL_SAFE
+
+#endif // } CPL_FAST
+
+#endif // } DOXYGEN
+
+#ifndef CPL_ASSERT // {
+/// Perform a run-time verification.
+///
+/// By default, if the condition is false, this throws a generic
+/// `std::logic_error` with the specified message. Making this a macro allows
+/// user code to override it with a custom mechanism.
+#define CPL_ASSERT(CONDITION, MESSAGE) \
+  if (CONDITION) {                     \
+  } else                               \
+  throw(std::logic_error(MESSAGE))
+#endif // } CPL_ASSERT
+
+#ifdef CPL_FAST // {
+#undef CPL_ASSERT
+#define CPL_ASSERT(CONDITION, MESSAGE)
+#endif // } CPL_FAST
+
 /// The Clever Protection Library.
 ///
 /// <em>"Clever people solve problems wise people avoid".</em>
@@ -222,74 +278,54 @@ SOFTWARE.
 ///
 /// As always, YMMV, no warranty is implied, may contain nuts, etc.
 namespace cpl {
-  /// Implement the fast (unsafe) variant of the clever protection library
-  /// (CPL).
+  /// A `Deleter` that doesn't delete the object.
   ///
-  /// This namespace only exists in Doxygen's imagination. In reality we
-  /// compile the correct variant directly into the @ref cpl namespace. Using
-  /// a fake nested namespace allows us to document both variants together.
-  namespace fast {};
+  /// We use this for the `std::shared_ptr` we attach to local data to ensure
+  /// there are no dangling pointers when it is destroyed.
+  template <typename T> struct no_delete {
+    /// Default constructor.
+    inline no_delete() = default;
 
-  /// Implement the safe (slow) variant of the clever protection library
-  /// (CPL).
-  ///
-  /// This namespace only exists in Doxygen's imagination. In reality we
-  /// compile the correct variant directly into the @ref cpl namespace. Using
-  /// a fake nested namespace allows us to document both variants together.
-  namespace safe {};
-};
+    /// Copy constructor.
+    template <typename U> inline no_delete(const no_delete<U>&) {
+    }
 
-/// The name of the CPL variant we are compiling
-#define CPL_VARIANT
+    /// (Do not) delete the given pointer.
+    inline void operator()(T*) const {
+    }
+  };
 
-/// If this is defined, the fast (unsafe) variant will be compiled.
-#define CPL_FAST
+  /// A fast (unsafe) holder of some value.
+  template <typename T> class is {
+  protected:
+    /// The held value.
+    T m_value;
 
-/// If this is defined, the safe (slow) variant will be compiled.
-#define CPL_SAFE
+#ifdef CPL_SAFE // {
+    template <typename U> friend class borrow;
 
-/// If this is defined, do not provide the `cpl` version of the standard
-/// collections, and do not even include their header files.
-#define CPL_WITHOUT_COLLECTIONS
+    /// Track the lifetime of the data.
+    std::shared_ptr<T> m_shared_ptr;
+#endif // } CPL_SAFE
 
-#else // DOXYGEN
+  public:
+    /// Reuse the held value constructors.
+    template <typename... Args>
+    inline is(Args&&... args)
+      : m_value(std::forward<Args>(args)...)
+#ifdef CPL_SAFE // {
+        ,
+        m_shared_ptr(&m_value, no_delete<T>())
+#endif // } CPL_SAFE
+    {
+    }
 
-// Ensure one of @ref CPL_FAST or @ref CPL_SAFE are defined, and configure the
-// @ref CPL_VARIANT accordingly.
+    /// Access the raw pointer.
+    inline T* get() {
+      return &m_value;
+    }
+  };
 
-#ifdef CPL_FAST
-
-#ifdef CPL_SAFE
-#error "Both CPL_FAST and CPL_SAFE are defined"
-#endif // CPL_SAFE
-
-#define CPL_VARIANT "fast"
-
-#else // CPL_FAST
-
-#ifdef CPL_SAFE
-#define CPL_VARIANT "safe"
-#else // CPL_SAFE
-#error "No CPL variant chosen - neither CPL_FAST nor CPL_SAFE are defined"
-#endif // CPL_SAFE
-
-#endif // CPL_FAST
-
-#endif // DOXYGEN
-
-#ifndef CPL_ASSERT
-/// Perform a run-time verification.
-///
-/// By default, if the condition is false, this throws a generic
-/// `std::logic_error` with the specified message. Making this a macro allows
-/// user code to override it with a custom mechanism.
-#define CPL_ASSERT(CONDITION, MESSAGE) \
-  if (CONDITION) {                     \
-  } else                               \
-  throw(std::logic_error(MESSAGE))
-#endif // CPL_ASSERT
-
-namespace cpl {
   /// An additional parameter for unsafe raw pointer operations.
   ///
   /// This allows us to use @ref MUST_NOT_COMPILE for verifying unsafe
@@ -313,6 +349,26 @@ namespace cpl {
   /// This allows us to use @ref MUST_NOT_COMPILE for verifying unsafe
   /// constructions are indeed forbidden.
   enum unsafe_const_t {};
+
+  /// Cast a raw pointer to a different type.
+  template <typename T, typename U> inline T* cast_raw_ptr(U* other, unsafe_raw_t) {
+    return reinterpret_cast<T*>(other);
+  }
+
+  /// Cast a raw pointer to a different type.
+  template <typename T, typename U> inline T* cast_raw_ptr(U* other, unsafe_static_t) {
+    return static_cast<T*>(other);
+  }
+
+  /// Cast a raw pointer to a different type.
+  template <typename T, typename U> inline T* cast_raw_ptr(U* other, unsafe_dynamic_t) {
+    return dynamic_cast<T*>(other);
+  }
+
+  /// Cast a raw pointer to a different type.
+  template <typename T, typename U> inline T* cast_raw_ptr(U* other, unsafe_const_t) {
+    return const_cast<T*>(other);
+  }
 
   /// Cast a unique pointer to a different type.
   template <typename T, typename U> inline std::unique_ptr<T> cast_unique_ptr(std::unique_ptr<U>&& other, unsafe_raw_t) {
@@ -354,7 +410,18 @@ namespace cpl {
     return std::shared_ptr<T>(other, const_cast<T*>(other.get()));
   }
 
-  /// A fast (unsafe) shared indirection that uses reference counting.
+  /// Cast the weak pointer of a `ptr` of a different type.
+  template <typename T, typename U, typename C>
+  inline std::weak_ptr<T>
+  cast_weak_ptr(const std::shared_ptr<T>& into_unsafe_ptr, const std::weak_ptr<U>& from_weak_ptr, C cast_type) {
+    if (into_unsafe_ptr) {
+      return into_unsafe_ptr;
+    } else {
+      return cast_shared_ptr<T>(from_weak_ptr.lock(), cast_type);
+    }
+  }
+
+  /// An indirection that uses reference counting.
   template <typename T> class shared : public std::shared_ptr<T> {
     template <typename U> friend class shared;
 
@@ -376,7 +443,7 @@ namespace cpl {
     }
   };
 
-  /// A fast (unsafe) pointer that uses reference counting.
+  /// A pointer that uses reference counting.
   template <typename T> class sptr : public shared<T> {
     using shared<T>::shared;
 
@@ -390,7 +457,7 @@ namespace cpl {
     }
   };
 
-  /// A fast (unsafe) reference that uses reference counting.
+  /// A reference that uses reference counting.
   template <typename T> class sref : public shared<T> {
   public:
     /// Unsafe construction from a raw pointer.
@@ -431,656 +498,375 @@ namespace cpl {
     }
   };
 
-#ifdef DOXYGEN
-  namespace fast {
-#endif // DOXYGEN
+  /// An indirection that deletes the data when it is deleted.
+  template <typename T> class unique : public std::unique_ptr<T> {
+    template <typename U> friend class unique;
+#ifdef CPL_SAFE // {
+    template <typename U> friend class borrow;
 
-#if defined(DOXYGEN) || defined(CPL_FAST)
-    /// A fast (unsafe) holder of some value.
-    template <typename T> class is {
-    protected:
-      /// The held value.
-      T m_value;
+  protected:
+    /// Track the lifetime of the data.
+    std::shared_ptr<T> m_shared_ptr;
+#endif // } CPL_SAFE
 
-    public:
-      /// Reuse the held value constructors.
-      template <typename... Args> inline is(Args&&... args) : m_value(std::forward<Args>(args)...) {
-      }
-
-      /// Access the raw pointer.
-      inline T* get() {
-        return &m_value;
-      }
-    };
-
-    /// A fast (unsafe) indirection that deletes the data when it is deleted.
-    template <typename T> class unique : public std::unique_ptr<T> {
-      template <typename U> friend class unique;
-
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline unique(T* raw_ptr, unsafe_raw_t) : std::unique_ptr<T>(raw_ptr) {
-      }
-
-      /// Cast construction from a different type of unique indirection.
-      template <typename U, typename C>
-      inline unique(unique<U>&& other, C cast_type)
-        : std::unique_ptr<T>(cast_unique_ptr<T, U>(std::move(other), cast_type)) {
-      }
-
-      /// Forbid copy construction.
-      inline unique(const unique<T>&) = delete;
-
-      /// Take ownership from another unique indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline unique(unique<U>&& other)
-        : std::unique_ptr<T>(std::move(other)) {
-      }
-
-      /// Take ownership from another unique indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline unique<T>& operator=(unique<U>&& other) {
-        std::unique_ptr<T>::operator=(std::move(other));
-        return *this;
-      }
-    };
-
-    /// A fast (unsafe) pointer that deletes the data when it is deleted.
-    template <typename T> class uptr : public unique<T> {
-      template <typename U> friend class ptr;
-      using unique<T>::unique;
-
-    public:
-      /// Null default constructor.
-      inline uptr() : unique<T>(nullptr, unsafe_raw_t(0)) {
-      }
-
-      /// Explicit null constructor.
-      inline uptr(nullptr_t) : uptr() {
-      }
-    };
-
-    /// A fast (unsafe) reference that deletes the data when it is deleted.
-    ///
-    /// Due to the need to be able to return these, we must make them movable,
-    /// so this means we can't statically completely prevent the code from
-    /// creating null references. The safe version ensures these are never
-    /// used.
-    template <typename T> class uref : public unique<T> {
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline uref(T* raw_ptr, unsafe_raw_t) : unique<T>(raw_ptr, unsafe_raw_t(0)) {
-      }
-
-      /// Cast construction from a different type of unique indirection.
-      template <typename U, typename C> inline uref(unique<U>&& other, C cast_type) : unique<T>(std::move(other), cast_type) {
-      }
-
-      /// Copy a reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline uref(uref<U>&& other)
-        : unique<T>(std::move(other)) {
-      }
-
-      /// Assign a reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline uref& operator=(uref<U>&& other) {
-        unique<T>::operator=(std::move(other));
-        return *this;
-      }
-
-      /// Copy a pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline uref(uptr<U>&& other)
-        : unique<T>(std::move(other)) {
-      }
-
-      /// Access the raw pointer.
-      inline const T* get() const {
-        return unique<T>::get();
-      }
-
-      /// Access the raw pointer.
-      inline T* get() {
-        return unique<T>::get();
-      }
-    };
-
-    /// A fast (unsafe) indirection for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class borrow {
-      template <typename U> friend class borrow;
-
-    protected:
-      /// The raw pointer to the value.
-      T* m_raw_ptr;
-
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline borrow(T* raw_ptr, unsafe_raw_t) : m_raw_ptr(raw_ptr) {
-      }
-
-      /// Cast construction from a different type of borrow.
-      template <typename U> inline borrow(borrow<U> other, unsafe_raw_t) : m_raw_ptr(reinterpret_cast<T*>(other.m_raw_ptr)) {
-      }
-
-      /// Cast construction from a different type of borrow.
-      template <typename U> inline borrow(borrow<U> other, unsafe_static_t) : m_raw_ptr(static_cast<T*>(other.m_raw_ptr)) {
-      }
-
-      /// Cast construction from a different type of borrow.
-      template <typename U> inline borrow(borrow<U> other, unsafe_dynamic_t) : m_raw_ptr(dynamic_cast<T*>(other.m_raw_ptr)) {
-      }
-
-      /// Cast construction from a different type of borrow.
-      template <typename U> inline borrow(borrow<U> other, unsafe_const_t) : m_raw_ptr(const_cast<T*>(other.m_raw_ptr)) {
-      }
-
-      /// Copy a borrow.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(borrow<U> other)
-        : m_raw_ptr(other.m_raw_ptr) {
-      }
-
-      /// Construction from a held value.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(is<U>& other)
-        : m_raw_ptr(other.get()) {
-      }
-
-      /// Construction from a shared indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(const shared<U>& other)
-        : m_raw_ptr(other.get()) {
-      }
-
-      /// Construction from a unique indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(const unique<U>& other)
-        : m_raw_ptr(other.get()) {
-      }
-    };
-
-    /// A fast (unsafe) pointer for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class ptr : public borrow<T> {
-      using borrow<T>::borrow;
-
-    public:
-      /// Deterministic null default constructor.
-      ///
-      /// This is slower from the `T*` default constructor, for sanity.
-      inline ptr() : borrow<T>(nullptr, unsafe_raw_t(0)) {
-      }
-
-      /// Explicit null constructor.
-      inline ptr(nullptr_t) : ptr() {
-      }
-
-      /// Access the raw pointer.
-      inline T* get() const {
-        return borrow<T>::m_raw_ptr;
-      }
-    };
-
-    /// A fast (unsafe) reference for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class ref : public borrow<T> {
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline ref(T* raw_ptr, unsafe_raw_t) : borrow<T>(raw_ptr, unsafe_raw_t(0)) {
-      }
-
-      /// Cast construction from a different type of borrow.
-      template <typename U, typename C> inline ref(const borrow<U>& other, C cast_type) : borrow<T>(other, cast_type) {
-      }
-
-      /// Copy a reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(ref<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Assign a reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(ref<U>& other) {
-        borrow<T>::operator=(other);
-        return *this;
-      }
-
-      /// Copy a pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline ref(const ptr<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Construct from a held value.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(is<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Assign from a held value.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(is<U>& other) {
-        borrow<T>::operator=(other);
-        return *this;
-      }
-
-      /// Copy a shared reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(sref<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Assign from a shared reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(sref<U>& other) {
-        borrow<T>::operator=(other);
-        return *this;
-      }
-
-      /// Copy a unique pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline ref(const sptr<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Copy a unique reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(uref<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Assign from a unique reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(uref<U>& other) {
-        borrow<T>::operator=(other);
-        return *this;
-      }
-
-      /// Copy a unique pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline ref(const uptr<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Access the raw pointer.
-      inline const T* get() const {
-        return borrow<T>::m_raw_ptr;
-      }
-
-      /// Access the raw pointer.
-      inline T* get() {
-        return borrow<T>::m_raw_ptr;
-      }
-    };
-#endif // DOXYGEN || CPL_FAST
-
-#ifdef DOXYGEN
-  }
-
-  namespace safe {
-#endif // DOXYGEN
-
-#if defined(DOXYGEN) || defined(CPL_SAFE)
-    /// A `Deleter` that doesn't delete the object.
-    ///
-    /// We use this for the `std::shared_ptr` we attach to local data to ensure
-    /// there are no dangling pointers when it is destroyed.
-    template <typename T> struct no_delete {
-      /// Default constructor.
-      inline no_delete() = default;
-
-      /// Copy constructor.
-      template <typename U> inline no_delete(const no_delete<U>&) {
-      }
-
-      /// (Do not) delete the given pointer.
-      inline void operator()(T*) const {
-      }
-    };
-
-    /// Cast the weak pointer of a `ptr` of a different type.
-    template <typename T, typename U, typename C>
-    inline std::weak_ptr<T>
-    cast_weak_ptr(const std::shared_ptr<T>& into_unsafe_ptr, const std::weak_ptr<U>& from_weak_ptr, C cast_type) {
-      if (into_unsafe_ptr) {
-        return into_unsafe_ptr;
-      } else {
-        return cast_shared_ptr<T>(from_weak_ptr.lock(), cast_type);
-      }
+  public:
+    /// Unsafe construction from a raw pointer.
+    inline unique(T* raw_ptr, unsafe_raw_t)
+      : std::unique_ptr<T>(raw_ptr)
+#ifdef CPL_SAFE // {
+        ,
+        m_shared_ptr(raw_ptr, no_delete<T>())
+#endif // } CPL_SAFE
+    {
     }
 
-    /// A fast (unsafe) holder of some value.
-    template <typename T> class is {
-      template <typename U> friend class borrow;
+    /// Cast construction from a different type of unique indirection.
+    template <typename U, typename C>
+    inline unique(unique<U>&& other, C cast_type)
+      : std::unique_ptr<T>(cast_unique_ptr<T, U>(std::move(other), cast_type))
+#ifdef CPL_SAFE // {
+        ,
+        m_shared_ptr(cast_shared_ptr<T, U>(std::move(other.m_shared_ptr), cast_type))
+#endif // } CPL_SAFE
+    {
+    }
 
-    protected:
-      /// The held value.
-      T m_value;
+    /// Forbid copy construction.
+    inline unique(const unique<T>&) = delete;
 
-      /// Track the lifetime of the data.
-      std::shared_ptr<T> m_shared_ptr;
+    /// Take ownership from another unique indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline unique(unique<U>&& other)
+      : std::unique_ptr<T>(std::move(other))
+#ifdef CPL_SAFE // {
+        ,
+        m_shared_ptr(std::move(other.m_shared_ptr))
+#endif // } CPL_SAFE
+    {
+    }
 
-    public:
-      /// Reuse the held value constructors.
-      template <typename... Args>
-      inline is(Args&&... args)
-        : m_value(std::forward<Args>(args)...), m_shared_ptr(&m_value, no_delete<T>()) {
-      }
+    /// Take ownership from another unique indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline unique<T>& operator=(unique<U>&& other) {
+      std::unique_ptr<T>::operator=(std::move(other));
+#ifdef CPL_SAFE // {
+      m_shared_ptr = std::move(other.m_shared_ptr);
+#endif // } CPL_SAFE
+      return *this;
+    }
+  };
 
-      /// Access the raw pointer.
-      inline T* get() {
-        return &m_value;
-      }
-    };
+  /// A pointer that deletes the data when it is deleted.
+  template <typename T> class uptr : public unique<T> {
+    template <typename U> friend class ptr;
+    using unique<T>::unique;
 
-    /// A safe (slow) indirection that deletes the data when it is deleted.
-    template <typename T> class unique : public std::unique_ptr<T> {
-      template <typename U> friend class unique;
-      template <typename U> friend class borrow;
+  public:
+    /// Null default constructor.
+    inline uptr() : unique<T>(nullptr, unsafe_raw_t(0)) {
+    }
 
-    protected:
-      /// Track the lifetime of the data.
-      std::shared_ptr<T> m_shared_ptr;
+    /// Explicit null constructor.
+    inline uptr(nullptr_t) : uptr() {
+    }
+  };
 
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline unique(T* raw_ptr, unsafe_raw_t) : std::unique_ptr<T>(raw_ptr), m_shared_ptr(raw_ptr, no_delete<T>()) {
-      }
+  /// A reference that deletes the data when it is deleted.
+  ///
+  /// Due to the need to be able to return these, we must make them movable,
+  /// so this means we can't statically completely prevent the code from
+  /// creating null references. The safe version ensures these are never
+  /// used.
+  template <typename T> class uref : public unique<T> {
+  public:
+    /// Unsafe construction from a raw pointer.
+    inline uref(T* raw_ptr, unsafe_raw_t) : unique<T>(raw_ptr, unsafe_raw_t(0)) {
+    }
 
-      /// Cast construction from a different type of unique indirection.
-      template <typename U, typename C>
-      inline unique(unique<U>&& other, C cast_type)
-        : std::unique_ptr<T>(cast_unique_ptr<T, U>(std::move(other), cast_type)),
-          m_shared_ptr(cast_shared_ptr<T, U>(std::move(other.m_shared_ptr), cast_type)) {
-      }
+    /// Cast construction from a different type of unique indirection.
+    template <typename U, typename C> inline uref(unique<U>&& other, C cast_type) : unique<T>(std::move(other), cast_type) {
+    }
 
-      /// Forbid copy construction.
-      inline unique(const unique<T>&) = delete;
+    /// Copy a reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline uref(uref<U>&& other)
+      : unique<T>(std::move(other)) {
+    }
 
-      /// Take ownership from another unique indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline unique(unique<U>&& other)
-        : std::unique_ptr<T>(std::move(other)), m_shared_ptr(std::move(other.m_shared_ptr)) {
-      }
+    /// Assign a reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline uref& operator=(uref<U>&& other) {
+      unique<T>::operator=(std::move(other));
+      return *this;
+    }
 
-      /// Take ownership from another unique indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline unique<T>& operator=(unique<U>&& other) {
-        std::unique_ptr<T>::operator=(std::move(other));
-        m_shared_ptr = std::move(other.m_shared_ptr);
-        return *this;
-      }
-    };
+    /// Copy a pointer.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    explicit inline uref(uptr<U>&& other)
+      : unique<T>(std::move(other)) {
+    }
 
-    /// A safe (slow) pointer that deletes the data when it is deleted.
-    template <typename T> class uptr : public unique<T> {
-      using unique<T>::unique;
+    /// Access the raw pointer.
+    inline const T* get() const {
+      return unique<T>::get();
+    }
 
-    public:
-      /// Null default constructor.
-      inline uptr() : unique<T>(nullptr, unsafe_raw_t(0)) {
-      }
+    /// Access the raw pointer.
+    inline T* get() {
+      return unique<T>::get();
+    }
+  };
 
-      /// Explicit null constructor.
-      inline uptr(nullptr_t) : uptr() {
-      }
-    };
+  /// An indirection for data whose lifetime is determined elsewhere.
+  template <typename T> class borrow {
+    template <typename U> friend class borrow;
 
-    /// A safe (slow) reference that deletes the data when it is deleted.
+  protected:
+#ifdef CPL_FAST // {
+    /// The raw pointer to the value.
+    T* m_raw_ptr;
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+    /// If we hold a pointer created by `unsafe_ref` or `unsafe_ptr`, then
+    /// this will provide a lifetime to `m_weak_ptr`.
+    std::shared_ptr<T> m_unsafe_ptr;
+
+    /// A weak pointer to the track the lifetime of the data.
+    std::weak_ptr<T> m_weak_ptr;
+#endif // } CPL_SAFE
+
+  public:
+    /// Unsafe construction from a raw pointer.
+    inline borrow(T* raw_ptr, unsafe_raw_t)
+      :
+#ifdef CPL_FAST // {
+        m_raw_ptr(raw_ptr)
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+        m_unsafe_ptr(raw_ptr, no_delete<T>()),
+        m_weak_ptr(m_unsafe_ptr)
+#endif // } CPL_SAFE
+    {
+    }
+
+    /// Cast construction from a different type of borrow.
+    template <typename U, typename C>
+    inline borrow(borrow<U> other, C cast_type)
+      :
+#ifdef CPL_FAST // {
+        m_raw_ptr(cast_raw_ptr<T>(other.m_raw_ptr, cast_type))
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+        m_unsafe_ptr(cast_shared_ptr<T, U>(other.m_unsafe_ptr, cast_type)),
+        m_weak_ptr(cast_weak_ptr(m_unsafe_ptr, other.m_weak_ptr, cast_type))
+#endif // } CPL_SAFE
+    {
+    }
+
+    /// Copy a borrow.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline borrow(borrow<U> other)
+      :
+#ifdef CPL_FAST // {
+        m_raw_ptr(other.m_raw_ptr)
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+        m_unsafe_ptr(other.m_unsafe_ptr ? std::shared_ptr<T>(other.m_unsafe_ptr.get(), no_delete<T>())
+                                        : std::shared_ptr<T>(nullptr)),
+        m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock())
+#endif // } CPL_SAFE
+    {
+    }
+
+    /// Construction from a held value.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline borrow(is<U>& other)
+      :
+#ifdef CPL_FAST // {
+        m_raw_ptr(other.get())
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+        m_unsafe_ptr(),
+        m_weak_ptr(other.m_shared_ptr)
+#endif // } CPL_SAFE
+    {
+    }
+
+    /// Construction from a shared indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline borrow(const shared<U>& other)
+      :
+#ifdef CPL_FAST // {
+        m_raw_ptr(other.get())
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+        m_unsafe_ptr(),
+        m_weak_ptr(other)
+#endif // } CPL_SAFE
+    {
+    }
+
+    /// Construction from a unique indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline borrow(const unique<U>& other)
+      :
+#ifdef CPL_FAST // {
+        m_raw_ptr(other.get())
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+        m_unsafe_ptr(),
+        m_weak_ptr(other.m_shared_ptr)
+#endif // } CPL_SAFE
+    {
+    }
+  };
+
+  /// A pointer for data whose lifetime is determined elsewhere.
+  template <typename T> class ptr : public borrow<T> {
+    using borrow<T>::borrow;
+
+  public:
+    /// Deterministic null default constructor.
     ///
-    /// Due to the need to be able to return these, we must make them movable,
-    /// so this means we can't statically completely prevent the code from
-    /// creating null references. The safe version ensures these are never
-    /// used.
-    template <typename T> class uref : public unique<T> {
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline uref(T* raw_ptr, unsafe_raw_t) : unique<T>(raw_ptr, unsafe_raw_t(0)) {
-        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
-      }
+    /// This is slower from the `T*` default constructor, for sanity.
+    inline ptr() : borrow<T>(nullptr, unsafe_raw_t(0)) {
+    }
 
-      /// Cast construction from a different type of unique reference.
-      template <typename U, typename C> inline uref(unique<U>&& other, C cast_type) : unique<T>(std::move(other), cast_type) {
-        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
-      }
+    /// Explicit null constructor.
+    inline ptr(nullptr_t) : ptr() {
+    }
 
-      /// Take ownership from another unique reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline uref(uref<U>&& other)
-        : unique<T>(std::move(other)) {
-        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
-      }
+    /// Access the raw pointer.
+    ///
+    /// In safe mode, this isn't as safe as we'd like it to be, since another
+    /// thread may delete the value between the time we `return` and the time
+    /// the caller uses the value.
+    inline T* get() const {
+#ifdef CPL_FAST // {
+      return borrow<T>::m_raw_ptr;
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+      return borrow<T>::m_weak_ptr.lock().get();
+#endif // } CPL_SAFE
+    }
+  };
 
-      /// Take ownership from another unique reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline uref& operator=(uref<U>&& other) {
-        unique<T>::operator=(std::move(other));
-        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
-        return *this;
-      }
+  /// A reference for data whose lifetime is determined elsewhere.
+  template <typename T> class ref : public borrow<T> {
+  public:
+    /// Unsafe construction from a raw pointer.
+    inline ref(T* raw_ptr, unsafe_raw_t) : borrow<T>(raw_ptr, unsafe_raw_t(0)) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-      /// Take ownership from another unique pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline uref(uptr<U>&& other)
-        : unique<T>(std::move(other)) {
-        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
-      }
+    /// Cast construction from a different type of borrow.
+    template <typename U, typename C> inline ref(const borrow<U>& other, C cast_type) : borrow<T>(other, cast_type) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-      /// Access the raw pointer.
-      inline const T* get() const {
-        const T* raw_ptr = unique<T>::get();
-        CPL_ASSERT(raw_ptr, "accessing a null reference");
-        return raw_ptr;
-      }
+    /// Copy a reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref(ref<U>& other)
+      : borrow<T>(other) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-      /// Access the raw pointer.
-      inline T* get() {
-        T* raw_ptr = unique<T>::get();
-        CPL_ASSERT(raw_ptr, "accessing a null reference");
-        return raw_ptr;
-      }
-    };
+    /// Assign a reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref& operator=(ref<U>& other) {
+      borrow<T>::operator=(other);
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
+      return *this;
+    }
 
-    /// A safe (slow) indirection for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class borrow {
-      template <typename U> friend class borrow;
+    /// Copy a pointer.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    explicit inline ref(const ptr<U>& other)
+      : borrow<T>(other) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-    protected:
-      /// If we hold a pointer created by `unsafe_ref` or `unsafe_ptr`, then
-      /// this will provide a lifetime to `m_weak_ptr`.
-      std::shared_ptr<T> m_unsafe_ptr;
+    /// Construct from a held value.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref(is<U>& other)
+      : borrow<T>(other) {
+    }
 
-      /// A weak pointer to the track the lifetime of the data.
-      std::weak_ptr<T> m_weak_ptr;
+    /// Assign from a held value.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref& operator=(is<U>& other) {
+      borrow<T>::operator=(other);
+      return *this;
+    }
 
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline borrow(T* raw_ptr, unsafe_raw_t) : m_unsafe_ptr(raw_ptr, no_delete<T>()), m_weak_ptr(m_unsafe_ptr) {
-      }
+    /// Copy a shared reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref(sref<U>& other)
+      : borrow<T>(other) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-      /// Cast construction from a different type of borrow.
-      template <typename U, typename C>
-      inline borrow(const borrow<U>& other, C cast_type)
-        : m_unsafe_ptr(cast_shared_ptr<T, U>(other.m_unsafe_ptr, cast_type)),
-          m_weak_ptr(cast_weak_ptr(m_unsafe_ptr, other.m_weak_ptr, cast_type)) {
-      }
+    /// Assign from a shared reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref& operator=(sref<U>& other) {
+      borrow<T>::operator=(other);
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
+      return *this;
+    }
 
-      /// Copy a borrow.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(const borrow<U>& other)
-        : m_unsafe_ptr(other.m_unsafe_ptr ? std::shared_ptr<T>(other.m_unsafe_ptr.get(), no_delete<T>())
-                                          : std::shared_ptr<T>(nullptr)),
-          m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock()) {
-      }
+    /// Copy a unique pointer.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    explicit inline ref(const sptr<U>& other)
+      : borrow<T>(other) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-      /// Construction from a held value.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(is<U>& other)
-        : m_unsafe_ptr(), m_weak_ptr(other.m_shared_ptr) {
-      }
+    /// Copy a unique reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref(uref<U>& other)
+      : borrow<T>(other) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-      /// Construction from a unique indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(const unique<U>& other)
-        : m_unsafe_ptr(), m_weak_ptr(other.m_shared_ptr) {
-      }
+    /// Assign from a unique reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref& operator=(uref<U>& other) {
+      borrow<T>::operator=(other);
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
+      return *this;
+    }
 
-      /// Construction from a shared indirection.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline borrow(const shared<U>& other)
-        : m_unsafe_ptr(), m_weak_ptr(other) {
-      }
-    };
+    /// Copy a unique pointer.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    explicit inline ref(const uptr<U>& other)
+      : borrow<T>(other) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
 
-    /// A safe (slow) pointer for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class ptr : public borrow<T> {
-      using borrow<T>::borrow;
+    /// Access the raw pointer.
+    inline const T* get() const {
+#ifdef CPL_FAST // {
+      return borrow<T>::m_raw_ptr;
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+      const T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
+      CPL_ASSERT(raw_ptr, "accessing a null reference");
+      return raw_ptr;
+#endif // } CPL_SAFE
+    }
 
-    public:
-      /// Deterministic null default constructor.
-      inline ptr() : borrow<T>(nullptr, unsafe_raw_t(0)) {
-      }
-
-      /// Explicit null constructor.
-      inline ptr(nullptr_t) : ptr() {
-      }
-
-      /// Access the raw pointer.
-      ///
-      /// This isn't as safe as we'd like it to be, since another thread may
-      /// delete the value between the time we `return` and the time the caller
-      /// uses the value.
-      inline T* get() const {
-        return borrow<T>::m_weak_ptr.lock().get();
-      }
-    };
-
-    /// A safe (slow) reference for data whose lifetime is determined
-    /// elsewhere.
-    template <typename T> class ref : public borrow<T> {
-    public:
-      /// Unsafe construction from a raw pointer.
-      inline ref(T* raw_ptr, unsafe_raw_t) : borrow<T>(raw_ptr, unsafe_raw_t(0)) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Cast construction from a different type of borrow.
-      template <typename U, typename C> inline ref(const borrow<U>& other, C cast_type) : borrow<T>(other, cast_type) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Copy a reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(ref<U>& other)
-        : borrow<T>(other) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Assign from a reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(ref<U>& other) {
-        borrow<T>::operator=(other);
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-        return *this;
-      }
-
-      /// Copy a pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline ref(const ptr<U>& other)
-        : borrow<T>(other) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Construct from a held value.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(is<U>& other)
-        : borrow<T>(other) {
-      }
-
-      /// Assign from a held value.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(is<U>& other) {
-        borrow<T>::operator=(other);
-        return *this;
-      }
-
-      /// Copy a shared reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(sref<U>& other)
-        : borrow<T>(other) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Assign from a shared reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(sref<U>& other) {
-        borrow<T>::operator=(other);
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-        return *this;
-      }
-
-      /// Copy a shared pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline ref(const sptr<U>& other)
-        : borrow<T>(other) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Copy a unique reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(uref<U>& other)
-        : borrow<T>(other) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Assign from a unique reference.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref& operator=(uref<U>& other) {
-        borrow<T>::operator=(other);
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-        return *this;
-      }
-
-      /// Copy a unique pointer.
-      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      explicit inline ref(const uptr<U>& other)
-        : borrow<T>(other) {
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Access the raw pointer.
-      ///
-      /// This isn't as safe as we'd like it to be, since another thread may
-      /// delete the value between the time we `return` and the time the caller
-      /// uses the value.
-      inline const T* get() const {
-        const T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
-        CPL_ASSERT(raw_ptr, "accessing a null reference");
-        return raw_ptr;
-      }
-
-      /// Access the raw pointer.
-      ///
-      /// This isn't as safe as we'd like it to be, since another thread may
-      /// delete the value between the time we `return` and the time the caller
-      /// uses the value.
-      inline T* get() {
-        T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
-        CPL_ASSERT(raw_ptr, "accessing a null reference");
-        return raw_ptr;
-      }
-    };
-
-#endif // DOXYGEN || CPL_SAFE
-
-#ifdef DOXYGEN
-  }
-#endif // DOXYGEN
+    /// Access the raw pointer.
+    inline T* get() {
+#ifdef CPL_FAST // {
+      return borrow<T>::m_raw_ptr;
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+      const T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
+      CPL_ASSERT(raw_ptr, "accessing a null reference");
+      return raw_ptr;
+#endif // } CPL_SAFE
+    }
+  };
 
   /// @file
   /// Implement the unsafe creation of pointers and references.inters and
@@ -1122,137 +908,95 @@ namespace cpl {
     return ptr<T>{ &data, unsafe_raw_t(0) };
   }
 
-#ifdef DOXYGEN
-  namespace fast {
-#endif // DOXYGEN
-
-#if defined(DOXYGEN) || defined(CPL_FAST)
-    /// A static cast between reference types.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline sref<T> cast_static(const sref<U>& from_ref) {
-      return sref<T>{ from_ref, unsafe_static_t(0) };
-    }
-
-    /// A static cast between pointer types.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline sptr<T> cast_static(const sptr<U>& from_ptr) {
-      return sptr<T>{ from_ptr, unsafe_static_t(0) };
-    }
-
-    /// A static cast between reference types.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline uref<T> cast_static(uref<U>&& from_ref) {
-      return uref<T>{ std::move(from_ref), unsafe_static_t(0) };
-    }
-
-    /// A static cast between pointer types.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline uptr<T> cast_static(uptr<U>&& from_ptr) {
-      return uptr<T>{ std::move(from_ptr), unsafe_static_t(0) };
-    }
-
-    /// A static cast between reference types.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline ref<T> cast_static(const ref<U>& from_ref) {
-      return ref<T>{ from_ref, unsafe_static_t(0) };
-    }
-
-    /// A static cast between pointer types.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline ptr<T> cast_static(const ptr<U>& from_ptr) {
-      return ptr<T>{ from_ptr, unsafe_static_t(0) };
-    }
-#endif // DOXYGEN || CPL_FAST
-
-#ifdef DOXYGEN
+  /// A static cast between reference types.
+  ///
+  /// In safe mode, this verifies that the raw pointer value did not change,
+  /// which will always be true unless you use virtual base classes.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sref<T> cast_static(const sref<U>& from_ref) {
+#ifdef CPL_SAFE // {
+    U* from_raw = const_cast<U*>(from_ref.get());
+    T* to_dynamic = dynamic_cast<T*>(from_raw);
+    T* to_raw = static_cast<T*>(from_raw);
+    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+#endif // } CPL_SAFE
+    return sref<T>{ from_ref, unsafe_static_t(0) };
   }
 
-  namespace safe {
-#endif // DOXYGEN
-
-#if defined(DOXYGEN) || defined(CPL_SAFE)
-    /// Static cast between related reference types.
-    ///
-    /// This verifies that the raw pointer value did not change, which will
-    /// always be true unless you use virtual base classes.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline sref<T> cast_static(const sref<U>& from_ref) {
-      U* from_raw = const_cast<U*>(from_ref.get());
-      T* to_dynamic = dynamic_cast<T*>(from_raw);
-      T* to_raw = static_cast<T*>(from_raw);
-      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
-      return sref<T>{ from_ref, unsafe_raw_t(0) };
-    }
-
-    /// Static cast between related pointer types.
-    ///
-    /// This verifies that the pointer value did not change, which will
-    /// always be true unless you use virtual base classes.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline sptr<T> cast_static(const sptr<U>& from_ptr) {
-      U* from_raw = from_ptr.get();
-      T* to_dynamic = dynamic_cast<T*>(from_raw);
-      T* to_raw = static_cast<T*>(from_raw);
-      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
-      return sptr<T>{ from_ptr, unsafe_raw_t(0) };
-    }
-
-    /// Static cast between related reference types.
-    ///
-    /// This verifies that the raw pointer value did not change, which will
-    /// always be true unless you use virtual base classes.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline uref<T> cast_static(uref<U>&& from_ref) {
-      U* from_raw = from_ref.get();
-      T* to_dynamic = dynamic_cast<T*>(from_raw);
-      T* to_raw = static_cast<T*>(from_raw);
-      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
-      return uref<T>{ std::move(from_ref), unsafe_raw_t(0) };
-    }
-
-    /// Static cast between related pointer types.
-    ///
-    /// This verifies that the pointer value did not change, which will
-    /// always be true unless you use virtual base classes.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline uptr<T> cast_static(uptr<U>&& from_ptr) {
-      U* from_raw = from_ptr.get();
-      T* to_dynamic = dynamic_cast<T*>(from_raw);
-      T* to_raw = static_cast<T*>(from_raw);
-      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
-      return uptr<T>{ std::move(from_ptr), unsafe_raw_t(0) };
-    }
-
-    /// Static cast between related reference types.
-    ///
-    /// This verifies that the raw pointer value did not change, which will
-    /// always be true unless you use virtual base classes.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline ref<T> cast_static(const ref<U>& from_ref) {
-      U* from_raw = const_cast<U*>(from_ref.get());
-      T* to_dynamic = dynamic_cast<T*>(from_raw);
-      T* to_raw = static_cast<T*>(from_raw);
-      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
-      return ref<T>{ from_ref, unsafe_raw_t(0) };
-    }
-
-    /// Static cast between related pointer types.
-    ///
-    /// This verifies that the pointer value did not change, which will
-    /// always be true unless you use virtual base classes.
-    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-    inline ptr<T> cast_static(const ptr<U>& from_ptr) {
-      U* from_raw = from_ptr.get();
-      T* to_dynamic = dynamic_cast<T*>(from_raw);
-      T* to_raw = static_cast<T*>(from_raw);
-      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
-      return ptr<T>{ from_ptr, unsafe_raw_t(0) };
-    }
-#endif // DOXYGEN || CPL_SAFE
-
-#ifdef DOXYGEN
+  /// A static cast between pointer types.
+  ///
+  /// In safe mode, this verifies that the raw pointer value did not change,
+  /// which will always be true unless you use virtual base classes.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sptr<T> cast_static(const sptr<U>& from_ptr) {
+#ifdef CPL_SAFE // {
+    U* from_raw = from_ptr.get();
+    T* to_dynamic = dynamic_cast<T*>(from_raw);
+    T* to_raw = static_cast<T*>(from_raw);
+    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+#endif // } CPL_SAFE
+    return sptr<T>{ from_ptr, unsafe_static_t(0) };
   }
-#endif // DOXYGEN
+
+  /// A static cast between reference types.
+  ///
+  /// In safe mode, this verifies that the raw pointer value did not change,
+  /// which will always be true unless you use virtual base classes.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline uref<T> cast_static(uref<U>&& from_ref) {
+#ifdef CPL_SAFE // {
+    U* from_raw = from_ref.get();
+    T* to_dynamic = dynamic_cast<T*>(from_raw);
+    T* to_raw = static_cast<T*>(from_raw);
+    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+#endif // } CPL_SAFE
+    return uref<T>{ std::move(from_ref), unsafe_static_t(0) };
+  }
+
+  /// A static cast between pointer types.
+  ///
+  /// In safe mode, this verifies that the raw pointer value did not change,
+  /// which will always be true unless you use virtual base classes.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline uptr<T> cast_static(uptr<U>&& from_ptr) {
+#ifdef CPL_SAFE // {
+    U* from_raw = from_ptr.get();
+    T* to_dynamic = dynamic_cast<T*>(from_raw);
+    T* to_raw = static_cast<T*>(from_raw);
+    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+#endif // } CPL_SAFE
+    return uptr<T>{ std::move(from_ptr), unsafe_static_t(0) };
+  }
+
+  /// A static cast between reference types.
+  ///
+  /// In safe mode, this verifies that the raw pointer value did not change,
+  /// which will always be true unless you use virtual base classes.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline ref<T> cast_static(const ref<U>& from_ref) {
+#ifdef CPL_SAFE // {
+    U* from_raw = const_cast<U*>(from_ref.get());
+    T* to_dynamic = dynamic_cast<T*>(from_raw);
+    T* to_raw = static_cast<T*>(from_raw);
+    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+#endif // } CPL_SAFE
+    return ref<T>{ from_ref, unsafe_static_t(0) };
+  }
+
+  /// A static cast between pointer types.
+  ///
+  /// In safe mode, this verifies that the raw pointer value did not change,
+  /// which will always be true unless you use virtual base classes.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline ptr<T> cast_static(const ptr<U>& from_ptr) {
+#ifdef CPL_SAFE // {
+    U* from_raw = from_ptr.get();
+    T* to_dynamic = dynamic_cast<T*>(from_raw);
+    T* to_raw = static_cast<T*>(from_raw);
+    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+#endif // } CPL_SAFE
+    return ptr<T>{ from_ptr, unsafe_static_t(0) };
+  }
 
   /// A reinterpret cast between reference types.
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
@@ -1362,47 +1106,64 @@ namespace cpl {
     return ptr<T>{ from_ptr, unsafe_const_t(0) };
   }
 
-#ifndef CPL_WITHOUT_COLLECTIONS
+#ifndef CPL_WITHOUT_COLLECTIONS // {
 
-#ifdef CPL_FAST
-  /// Compiles to the standard version of a bitset.
+#ifdef DOXYGEN
+  /// A fixed-size vector of bits.
+  template <size_t N> class bitset {};
+
+  /// A mapping from keys to values.
+  template <typename K, typename T, typename C = std::less<K>, typename A = std::allocator<std::pair<const K, T>>> class map {};
+
+  /// A set of values.
+  template <typename T, typename C = std::less<T>, typename A = std::allocator<T>> class set {};
+
+  /// Just a string.
+  class string {};
+
+  /// A dynamic vector of values.
+  template <typename T, typename A = std::allocator<T>> class vector {};
+#endif
+
+#ifdef CPL_FAST // {
+  // Compiles to the standard version of a bitset.
   template <size_t N> using bitset = std::bitset<N>;
 
-  /// Compiles to the standard version of a map.
-  ///
-  /// @todo Should we convert `at` to a faster, unchecked operation?
+  // Compiles to the standard version of a map.
+  //
+  // @todo Should we convert `at` to a faster, unchecked operation?
   template <typename K, typename T, typename C = std::less<K>, typename A = std::allocator<std::pair<const K, T>>>
   using map = std::map<K, T, C, A>;
 
-  /// Compiles to the standard version of a set.
+  // Compiles to the standard version of a set.
   template <typename T, typename C = std::less<T>, typename A = std::allocator<T>> using set = std::set<T, C, A>;
 
-  /// Compiles to the standard version of a string.
+  // Compiles to the standard version of a string.
   using string = std::string;
 
-  /// Compiles to the standard version of a vector.
-  ///
-  /// @todo Should we convert `at` to a faster, unchecked operation?
+  // Compiles to the standard version of a vector.
+  //
+  // @todo Should we convert `at` to a faster, unchecked operation?
   template <typename T, typename A = std::allocator<T>> using vector = std::vector<T, A>;
-#endif // CPL_FAST
+#endif // } CPL_FAST
 
-#ifdef CPL_SAFE
-  /// Compiles to the debug version of a bitset.
+#ifdef CPL_SAFE // {
+  // Compiles to the debug version of a bitset.
   template <size_t N> using bitset = __gnu_debug::bitset<N>;
 
-  /// Compiles to the debug version of a map.
+  // Compiles to the debug version of a map.
   template <typename K, typename T, typename C = std::less<K>, typename A = std::allocator<std::pair<const K, T>>>
   using map = __gnu_debug::map<K, T, C, A>;
 
-  /// Compiles to the debug version of a set.
+  // Compiles to the debug version of a set.
   template <typename T, typename C = std::less<T>, typename A = std::allocator<T>> using set = __gnu_debug::set<T, C, A>;
 
-  /// Compiles to the debug version of a string.
+  // Compiles to the debug version of a string.
   using string = __gnu_debug::string;
 
-  /// Compiles to the debug version of a vector.
+  // Compiles to the debug version of a vector.
   template <typename T, typename A = std::allocator<T>> using vector = __gnu_debug::vector<T, A>;
-#endif // CPL_SAFE
+#endif // } CPL_SAFE
 
-#endif // CPL_WITHOUT_COLLECTIONS
+#endif // } CPL_WITHOUT_COLLECTIONS
 }
