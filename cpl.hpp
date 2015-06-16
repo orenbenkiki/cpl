@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.12"
+#define CPL_VERSION "0.0.13"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -403,8 +403,15 @@ namespace cpl {
 
     /// Copy a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline sref(const sref<U>& other)
+    inline sref(sref<U>& other)
       : shared<T>(other) {
+    }
+
+    /// Assign a reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline sref& operator=(sref<U>& other) {
+      shared<T>::operator=(other);
+      return *this;
     }
 
     /// Copy a pointer.
@@ -472,8 +479,9 @@ namespace cpl {
 
       /// Take ownership from another unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline const unique<T>& operator=(unique<U>&& other) {
+      inline unique<T>& operator=(unique<U>&& other) {
         std::unique_ptr<T>::operator=(std::move(other));
+        return *this;
       }
     };
 
@@ -512,6 +520,13 @@ namespace cpl {
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline uref(uref<U>&& other)
         : unique<T>(std::move(other)) {
+      }
+
+      /// Assign a reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline uref& operator=(uref<U>&& other) {
+        unique<T>::operator=(std::move(other));
+        return *this;
       }
 
       /// Copy a pointer.
@@ -622,8 +637,15 @@ namespace cpl {
 
       /// Copy a reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(const ref<U>& other)
+      inline ref(ref<U>& other)
         : borrow<T>(other) {
+      }
+
+      /// Assign a reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(ref<U>& other) {
+        borrow<T>::operator=(other);
+        return *this;
       }
 
       /// Copy a pointer.
@@ -638,10 +660,24 @@ namespace cpl {
         : borrow<T>(other) {
       }
 
+      /// Assign from a held value.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(is<U>& other) {
+        borrow<T>::operator=(other);
+        return *this;
+      }
+
       /// Copy a shared reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(const sref<U>& other)
+      inline ref(sref<U>& other)
         : borrow<T>(other) {
+      }
+
+      /// Assign from a shared reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(sref<U>& other) {
+        borrow<T>::operator=(other);
+        return *this;
       }
 
       /// Copy a unique pointer.
@@ -652,8 +688,15 @@ namespace cpl {
 
       /// Copy a unique reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(const uref<U>& other)
+      inline ref(uref<U>& other)
         : borrow<T>(other) {
+      }
+
+      /// Assign from a unique reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(uref<U>& other) {
+        borrow<T>::operator=(other);
+        return *this;
       }
 
       /// Copy a unique pointer.
@@ -765,9 +808,10 @@ namespace cpl {
 
       /// Take ownership from another unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline const unique<T>& operator=(unique<U>&& other) {
+      inline unique<T>& operator=(unique<U>&& other) {
         std::unique_ptr<T>::operator=(std::move(other));
         m_shared_ptr = std::move(other.m_shared_ptr);
+        return *this;
       }
     };
 
@@ -808,6 +852,14 @@ namespace cpl {
       inline uref(uref<U>&& other)
         : unique<T>(std::move(other)) {
         CPL_ASSERT(unique<T>::get(), "constructing a null reference");
+      }
+
+      /// Take ownership from another unique reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline uref& operator=(uref<U>&& other) {
+        unique<T>::operator=(std::move(other));
+        CPL_ASSERT(unique<T>::get(), "constructing a null reference");
+        return *this;
       }
 
       /// Take ownership from another unique pointer.
@@ -924,9 +976,17 @@ namespace cpl {
 
       /// Copy a reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(const ref<U>& other)
+      inline ref(ref<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Assign from a reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(ref<U>& other) {
+        borrow<T>::operator=(other);
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+        return *this;
       }
 
       /// Copy a pointer.
@@ -942,11 +1002,26 @@ namespace cpl {
         : borrow<T>(other) {
       }
 
+      /// Assign from a held value.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(is<U>& other) {
+        borrow<T>::operator=(other);
+        return *this;
+      }
+
       /// Copy a shared reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(const sref<U>& other)
+      inline ref(sref<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Assign from a shared reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(sref<U>& other) {
+        borrow<T>::operator=(other);
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+        return *this;
       }
 
       /// Copy a shared pointer.
@@ -958,9 +1033,17 @@ namespace cpl {
 
       /// Copy a unique reference.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-      inline ref(const uref<U>& other)
+      inline ref(uref<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Assign from a unique reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref& operator=(uref<U>& other) {
+        borrow<T>::operator=(other);
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+        return *this;
       }
 
       /// Copy a unique pointer.
@@ -968,13 +1051,6 @@ namespace cpl {
       explicit inline ref(const uptr<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-      }
-
-      /// Ensure no assignment of a null reference.
-      inline const ref& operator=(const ref<T>& other) {
-        borrow<T>::operator=(other);
-        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
-        return *this;
       }
 
       /// Access the raw pointer.
