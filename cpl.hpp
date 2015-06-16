@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.10"
+#define CPL_VERSION "0.0.11"
 
 #ifdef DOXYGEN
 /// The Clever Protection Library.
@@ -159,13 +159,13 @@ SOFTWARE.
 ///
 /// ## Casting
 ///
-/// The `cpl::cast_clever` function works similarly to `std::dynamic_cast`, but
-/// it is faster since it assumes that the pointer value does not change (this
-/// assumption is checked in safe mode, of course).
-///
-/// If you are using virtual base classes etc. you'll need to use the real
-/// `cpl::cast_dynamic` function. CPL also provides the `cpl::cast_const`
-/// and `cpl::cast_reinterpret` functions.
+/// CPL provides `cpl::cast_static`, `cpl::cast_dynamic`,
+/// `cpl::cast_reinterpret` and `cpl::cast_const` which work on all the CPL
+/// types (except for `cpl::wptr`). The safe `cpl::cast_static` verifies that
+/// it gives the same results as `cpl::cast_dynamic`. This will only fail if
+/// there are virtual base classes involved, in which case you should use the
+/// more costly `cpl::cast_dynamic`. Other than this, CPL lets you freely shoot
+/// yourself in the foot using the casts.
 ///
 /// The names are all reversed since the normal names are keywords making them
 /// impossible to use as function names.
@@ -354,6 +354,76 @@ namespace cpl {
     return std::shared_ptr<T>(other, const_cast<T*>(other.get()));
   }
 
+  /// A fast (unsafe) shared indirection that uses reference counting.
+  template <typename T> class shared : public std::shared_ptr<T> {
+    template <typename U> friend class shared;
+
+  public:
+    /// Unsafe construction from a raw pointer.
+    inline shared(T* raw_ptr, unsafe_raw_t) : std::shared_ptr<T>(raw_ptr) {
+    }
+
+    /// Cast construction from a different type of shared indirection.
+    template <typename U, typename C>
+    inline shared(const shared<U>& other, C cast_type)
+      : std::shared_ptr<T>(cast_shared_ptr<T, U>(other, cast_type)) {
+    }
+
+    /// Copy construction from a compatible type of shared indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline shared(const shared<U>& other)
+      : std::shared_ptr<T>(other) {
+    }
+  };
+
+  /// A fast (unsafe) pointer that uses reference counting.
+  template <typename T> class sptr : public shared<T> {
+    using shared<T>::shared;
+
+  public:
+    /// Null default constructor.
+    inline sptr() : shared<T>(nullptr, unsafe_raw_t(0)) {
+    }
+
+    /// Explicit null constructor.
+    inline sptr(nullptr_t) : sptr() {
+    }
+  };
+
+  /// A fast (unsafe) reference that uses reference counting.
+  template <typename T> class sref : public shared<T> {
+  public:
+    /// Unsafe construction from a raw pointer.
+    inline sref(T* raw_ptr, unsafe_raw_t) : shared<T>(raw_ptr, unsafe_raw_t(0)) {
+    }
+
+    /// Cast construction from a different type of shared indirection.
+    template <typename U, typename C> inline sref(const shared<U>& other, C cast_type) : shared<T>(other, cast_type) {
+    }
+
+    /// Copy a reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline sref(const sref<U>& other)
+      : shared<T>(other) {
+    }
+
+    /// Copy a pointer.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    explicit inline sref(const sptr<U>& other)
+      : shared<T>(other) {
+    }
+
+    /// Access the raw pointer.
+    inline const T* get() const {
+      return shared<T>::get();
+    }
+
+    /// Access the raw pointer.
+    inline T* get() {
+      return shared<T>::get();
+    }
+  };
+
 #ifdef DOXYGEN
   namespace fast {
 #endif // DOXYGEN
@@ -480,6 +550,12 @@ namespace cpl {
         : m_raw_ptr(other.m_raw_ptr) {
       }
 
+      /// Construction from a shared indirection.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline borrow(const shared<U>& other)
+        : m_raw_ptr(other.get()) {
+      }
+
       /// Construction from a unique indirection.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       inline borrow(const unique<U>& other)
@@ -530,6 +606,18 @@ namespace cpl {
       /// Copy a pointer.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       explicit inline ref(const ptr<U>& other)
+        : borrow<T>(other) {
+      }
+
+      /// Copy a shared reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref(const sref<U>& other)
+        : borrow<T>(other) {
+      }
+
+      /// Copy a unique pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      explicit inline ref(const sptr<U>& other)
         : borrow<T>(other) {
       }
 
@@ -729,6 +817,12 @@ namespace cpl {
       inline borrow(const unique<U>& other)
         : m_unsafe_ptr(), m_weak_ptr(other.m_shared_ptr) {
       }
+
+      /// Construction from a shared indirection.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline borrow(const shared<U>& other)
+        : m_unsafe_ptr(), m_weak_ptr(other) {
+      }
     };
 
     /// A safe (slow) pointer for data whose lifetime is determined
@@ -779,6 +873,20 @@ namespace cpl {
       /// Copy a pointer.
       template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
       explicit inline ref(const ptr<U>& other)
+        : borrow<T>(other) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Copy a shared reference.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      inline ref(const sref<U>& other)
+        : borrow<T>(other) {
+        CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+      }
+
+      /// Copy a shared pointer.
+      template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+      explicit inline ref(const sptr<U>& other)
         : borrow<T>(other) {
         CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
       }
@@ -837,6 +945,16 @@ namespace cpl {
   /// Implement the unsafe creation of pointers and references.inters and
   /// references.
 
+  /// Create some value owned by a shared reference.
+  template <typename T, typename... Args> inline sref<T> make_sref(Args&&... args) {
+    return sref<T>{ new T(std::forward<Args>(args)...), unsafe_raw_t(0) };
+  }
+
+  /// Create some value owned by a shared pointer.
+  template <typename T, typename... Args> inline sptr<T> make_sptr(Args&&... args) {
+    return sptr<T>{ new T(std::forward<Args>(args)...), unsafe_raw_t(0) };
+  }
+
   /// Create some value owned by a unique reference.
   template <typename T, typename... Args> inline uref<T> make_uref(Args&&... args) {
     return uref<T>{ new T(std::forward<Args>(args)...), unsafe_raw_t(0) };
@@ -870,6 +988,18 @@ namespace cpl {
 #if defined(DOXYGEN) || defined(CPL_FAST)
     /// A static cast between reference types.
     template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    inline sref<T> cast_static(const sref<U>& from_ref) {
+      return sref<T>{ from_ref, unsafe_static_t(0) };
+    }
+
+    /// A static cast between pointer types.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    inline sptr<T> cast_static(const sptr<U>& from_ptr) {
+      return sptr<T>{ from_ptr, unsafe_static_t(0) };
+    }
+
+    /// A static cast between reference types.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
     inline uref<T> cast_static(uref<U>&& from_ref) {
       return uref<T>{ std::move(from_ref), unsafe_static_t(0) };
     }
@@ -900,6 +1030,32 @@ namespace cpl {
 #endif // DOXYGEN
 
 #if defined(DOXYGEN) || defined(CPL_SAFE)
+    /// Static cast between related reference types.
+    ///
+    /// This verifies that the raw pointer value did not change, which will
+    /// always be true unless you use virtual base classes.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    inline sref<T> cast_static(const sref<U>& from_ref) {
+      U* from_raw = const_cast<U*>(from_ref.get());
+      T* to_dynamic = dynamic_cast<T*>(from_raw);
+      T* to_raw = static_cast<T*>(from_raw);
+      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+      return sref<T>{ from_ref, unsafe_raw_t(0) };
+    }
+
+    /// Static cast between related pointer types.
+    ///
+    /// This verifies that the pointer value did not change, which will
+    /// always be true unless you use virtual base classes.
+    template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+    inline sptr<T> cast_static(const sptr<U>& from_ptr) {
+      U* from_raw = from_ptr.get();
+      T* to_dynamic = dynamic_cast<T*>(from_raw);
+      T* to_raw = static_cast<T*>(from_raw);
+      CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+      return sptr<T>{ from_ptr, unsafe_raw_t(0) };
+    }
+
     /// Static cast between related reference types.
     ///
     /// This verifies that the raw pointer value did not change, which will
@@ -959,6 +1115,18 @@ namespace cpl {
 
   /// A reinterpret cast between reference types.
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sref<T> cast_reinterpret(const sref<U>& from_ref) {
+    return sref<T>{ from_ref, unsafe_raw_t(0) };
+  }
+
+  /// A reinterpret cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sptr<T> cast_reinterpret(const sptr<U>& from_ptr) {
+    return sptr<T>{ from_ptr, unsafe_raw_t(0) };
+  }
+
+  /// A reinterpret cast between reference types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   inline uref<T> cast_reinterpret(uref<U>&& from_ref) {
     return uref<T>{ std::move(from_ref), unsafe_raw_t(0) };
   }
@@ -983,6 +1151,18 @@ namespace cpl {
 
   /// A dynamic cast between reference types.
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sref<T> cast_dynamic(const sref<U>& from_ref) {
+    return sref<T>{ from_ref, unsafe_dynamic_t(0) };
+  }
+
+  /// A dynamic cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sptr<T> cast_dynamic(const sptr<U>& from_ptr) {
+    return sptr<T>{ from_ptr, unsafe_dynamic_t(0) };
+  }
+
+  /// A dynamic cast between reference types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   inline uref<T> cast_dynamic(uref<U>&& from_ref) {
     return uref<T>{ std::move(from_ref), unsafe_dynamic_t(0) };
   }
@@ -1003,6 +1183,18 @@ namespace cpl {
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   inline ptr<T> cast_dynamic(const ptr<U>& from_ptr) {
     return ptr<T>{ from_ptr, unsafe_dynamic_t(0) };
+  }
+
+  /// A const cast between reference types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sref<T> cast_const(const sref<U>& from_ref) {
+    return sref<T>{ from_ref, unsafe_const_t(0) };
+  }
+
+  /// A const cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline sptr<T> cast_const(const sptr<U>& from_ptr) {
+    return sptr<T>{ from_ptr, unsafe_const_t(0) };
   }
 
   /// A const cast between reference types.

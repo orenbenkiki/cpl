@@ -152,6 +152,252 @@ namespace test {
 #endif
   }
 
+  /// Used for @ref MUST_NOT_COMPILE.
+  static cpl::sref<Foo> s_foo_sref = cpl::make_sref<Foo>();
+
+  /// Ensure there's no implicit conversion from pointer to reference.
+  MUST_NOT_COMPILE(Foo, s_foo_sref = cpl::sptr<T>(), "implicit conversion of pointer to a reference");
+
+  /// Ensure it is not possible to default construct a `cpl::sref`.
+  MUST_NOT_COMPILE(Foo, cpl::sref<T>(), "default reference construction");
+
+  /// Ensure it is not possible to explicitly construct a null `cpl::sref`.
+  MUST_NOT_COMPILE(Foo, cpl::sref<T>(nullptr), "explicit null reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::sref` from a raw reference.
+  MUST_NOT_COMPILE(Foo, cpl::sref<T>{(T*)nullptr }, "unsafe reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::sref` to an unrelated type.
+  MUST_NOT_COMPILE(Foo, cpl::sref<T>{ cpl::make_sref<int>(0) }, "unrelated reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::sref` to a sub-class.
+  MUST_NOT_COMPILE(Bar, cpl::sref<T>{ cpl::make_sref<Foo>() }, "sub-class reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::sref` to violate `const`-ness.
+  MUST_NOT_COMPILE(Foo, cpl::sref<T>{ cpl::make_sref<const Foo>() }, "const violation reference construction");
+
+  TEST_CASE("constructing an sref") {
+    REQUIRE(Foo::live_objects == 0);
+    THEN("we can make shared data") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sref<Bar> made_ptr = cpl::make_sref<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it") {
+        cpl::sref<Bar> copy_ptr = made_ptr;
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("casting an sref") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("an sref") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sref<Bar> bar_sref = cpl::make_sref<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("if we copy it to a reference to a base class") {
+        cpl::sref<Foo> foo_ref{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can static_cast it back to a reference to the derived class") {
+          cpl::sref<Bar> cast_bar_ref = cpl::cast_static<Bar>(foo_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can dynamic_cast it back to a reference to the derived class") {
+          cpl::sref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(foo_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can reinterpret_cast it back to a reference to the derived class") {
+          cpl::sref<Bar> cast_bar_ref = cpl::cast_dynamic<Bar>(foo_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can copy it to a reference to a const") {
+        cpl::sref<const Bar> const_bar_ref{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can const_cast it back to a reference mutable") {
+          cpl::sref<Bar> cast_bar_ref = cpl::cast_const<Bar>(const_bar_ref);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  /// Ensure it is not possible to construct a `cpl::sptr` from a raw ptrerence.
+  MUST_NOT_COMPILE(Foo, cpl::sptr<T>{(T*)nullptr }, "unsafe ptrerence construction");
+
+  /// Ensure it is not possible to construct a `cpl::sptr` to an unrelated type.
+  MUST_NOT_COMPILE(Foo, cpl::sptr<T>{ cpl::make_sptr<int>(0) }, "unrelated ptrerence construction");
+
+  /// Ensure it is not possible to construct a `cpl::sptr` to a sub-class.
+  MUST_NOT_COMPILE(Bar, cpl::sptr<T>{ cpl::make_sptr<Foo>() }, "sub-class ptrerence construction");
+
+  /// Ensure it is not possible to construct a `cpl::sptr` to violate `const`-ness.
+  MUST_NOT_COMPILE(Foo, cpl::sptr<T>{ cpl::make_sptr<const Foo>() }, "const violation ptrerence construction");
+
+  TEST_CASE("constructing an sptr") {
+    REQUIRE(Foo::live_objects == 0);
+    THEN("we have a default constructor") {
+      cpl::sptr<Foo> default_ptr;
+      THEN("we can copy it") {
+        default_ptr = default_ptr;
+      }
+    }
+    THEN("we can explicitly construct a nullptr") {
+      cpl::sptr<Foo> null_ptr(nullptr);
+      THEN("we can assign a nullptr to it") {
+        null_ptr = nullptr;
+      }
+    }
+    THEN("we can make shared data") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sptr<Bar> made_ptr = cpl::make_sptr<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it") {
+        cpl::sptr<Bar> copied_ptr = made_ptr;
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("casting an sptr") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a shared pointer to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sptr<Bar> bar_sptr = cpl::make_sptr<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("if we copy it to a pointer to a base class") {
+        cpl::sptr<Foo> foo_sptr{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can static_cast it back to a pointer to the derived class") {
+          cpl::sptr<Bar> cast_bar_sptr = cpl::cast_static<Bar>(foo_sptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can dynamic_cast it back to a pointer to the derived class") {
+          cpl::sptr<Bar> cast_bar_sptr = cpl::cast_dynamic<Bar>(foo_sptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+        THEN("we can reinterpret_cast it back to a pointer to the derived class") {
+          cpl::sptr<Bar> cast_bar_sptr = cpl::cast_dynamic<Bar>(foo_sptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+      THEN("we can copy it to a pointer to a const") {
+        cpl::sptr<const Bar> const_bar_sptr{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+        THEN("we can const_cast it back to a pointer mutable") {
+          cpl::sptr<Bar> cast_bar_sptr = cpl::cast_const<Bar>(const_bar_sptr);
+          REQUIRE(Foo::live_objects == 1);
+        }
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("converting an sref to an sptr") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a shared reference to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sref<Bar> bar_sref{ cpl::make_sref<Bar>(foo, bar) };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it to a pointer") {
+        cpl::sptr<Bar> bar_sptr{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer") {
+        cpl::sptr<Bar> bar_sptr;
+        bar_sptr = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a pointer to const") {
+        cpl::sptr<const Bar> const_bar_sptr{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer to const") {
+        cpl::sptr<const Bar> const_bar_sptr;
+        const_bar_sptr = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a pointer to the base class") {
+        cpl::sptr<Foo> foo_sptr{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer to the base class") {
+        cpl::sptr<Foo> foo_sptr;
+        foo_sptr = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a pointer to a const base class") {
+        cpl::sptr<const Foo> const_foo_sptr{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a pointer to a const base class") {
+        cpl::sptr<const Foo> const_foo_sptr;
+        const_foo_sptr = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("converting an sptr to an sref") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("a shared pointer to a derived class") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sptr<Bar> bar_sptr{ cpl::make_sptr<Bar>(foo, bar) };
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it to a reference") {
+        cpl::sref<Bar> bar_sref{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a reference to const") {
+        cpl::sref<const Bar> const_bar_sref{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a reference to the base class") {
+        cpl::sref<Foo> foo_sref{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a reference to a const base class") {
+        cpl::sref<const Foo> const_foo_sref{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  /// Used for @ref MUST_NOT_COMPILE.
+  static cpl::uref<Foo> s_foo_uref = cpl::make_uref<Foo>();
+
+  /// Ensure there's no implicit conversion from pointer to reference.
+  MUST_NOT_COMPILE(Foo, s_foo_uref = cpl::uptr<T>(), "implicit conversion of pointer to a reference");
+
+  /// Ensure it is not possible to default construct a `cpl::uref`.
+  MUST_NOT_COMPILE(Foo, cpl::uref<T>(), "default reference construction");
+
+  /// Ensure it is not possible to explicitly construct a null `cpl::uref`.
+  MUST_NOT_COMPILE(Foo, cpl::uref<T>(nullptr), "explicit null reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::uref` from a raw reference.
+  MUST_NOT_COMPILE(Foo, cpl::uref<T>{(T*)nullptr }, "unsafe reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::uref` to an unrelated type.
+  MUST_NOT_COMPILE(Foo, cpl::uref<T>{ cpl::make_uref<int>(0) }, "unrelated reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::uref` to a sub-class.
+  MUST_NOT_COMPILE(Bar, cpl::uref<T>{ cpl::make_uref<Foo>() }, "sub-class reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::uref` to violate `const`-ness.
+  MUST_NOT_COMPILE(Foo, cpl::uref<T>{ cpl::make_uref<const Foo>() }, "const violation reference construction");
+
   TEST_CASE("constructing a uref") {
     REQUIRE(Foo::live_objects == 0);
     THEN("we can make unique data") {
@@ -166,9 +412,6 @@ namespace test {
     }
     REQUIRE(Foo::live_objects == 0);
   }
-
-  /// Used for @ref MUST_NOT_COMPILE.
-  static cpl::uref<Foo> s_foo_uref = cpl::make_uref<Foo>();
 
 #ifdef MAKE_SFINAE_RESPOND_TO_DELETED_FUNCTIONS
   /// Ensure there's no copying `cpl::uref`.
@@ -212,6 +455,18 @@ namespace test {
     }
     REQUIRE(Foo::live_objects == 0);
   }
+
+  /// Ensure it is not possible to construct a `cpl::uptr` from a raw ptrerence.
+  MUST_NOT_COMPILE(Foo, cpl::uptr<T>{(T*)nullptr }, "unsafe ptrerence construction");
+
+  /// Ensure it is not possible to construct a `cpl::uptr` to an unrelated type.
+  MUST_NOT_COMPILE(Foo, cpl::uptr<T>{ cpl::make_uptr<int>(0) }, "unrelated ptrerence construction");
+
+  /// Ensure it is not possible to construct a `cpl::uptr` to a sub-class.
+  MUST_NOT_COMPILE(Bar, cpl::uptr<T>{ cpl::make_uptr<Foo>() }, "sub-class ptrerence construction");
+
+  /// Ensure it is not possible to construct a `cpl::uptr` to violate `const`-ness.
+  MUST_NOT_COMPILE(Foo, cpl::uptr<T>{ cpl::make_uptr<const Foo>() }, "const violation ptrerence construction");
 
   TEST_CASE("constructing a uptr") {
     REQUIRE(Foo::live_objects == 0);
@@ -360,8 +615,32 @@ namespace test {
     REQUIRE(Foo::live_objects == 0);
   }
 
+  /// Used for @ref MUST_NOT_COMPILE.
+  static Foo s_raw_foo;
+
+  /// Used for @ref MUST_NOT_COMPILE.
+  static cpl::ref<Foo> s_foo_ref{ cpl::unsafe_ref<Foo>(s_raw_foo) };
+
   /// Ensure there's no implicit conversion from pointer to reference.
-  MUST_NOT_COMPILE(Foo, s_foo_uref = cpl::uptr<T>(), "implicit conversion of pointer to a reference");
+  MUST_NOT_COMPILE(Foo, s_foo_ref = cpl::ptr<T>(), "implicit conversion of pointer to a reference");
+
+  /// Ensure it is not possible to default construct a `cpl::ref`.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>(), "default reference construction");
+
+  /// Ensure it is not possible to explicitly construct a null `cpl::ref`.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>(nullptr), "explicit null reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` from a raw reference.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>{(T*)nullptr }, "unsafe reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` to an unrelated type.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>{ cpl::unsafe_ref<int>(*(int*)nullptr) }, "unrelated reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` to a sub-class.
+  MUST_NOT_COMPILE(Bar, cpl::ref<T>{ cpl::unsafe_ref<Foo>(*(Foo*)nullptr) }, "sub-class reference construction");
+
+  /// Ensure it is not possible to construct a `cpl::ref` to violate `const`-ness.
+  MUST_NOT_COMPILE(Foo, cpl::ref<T>{ cpl::unsafe_ref<const Foo>(*(const Foo*)nullptr) }, "const violation reference construction");
 
   TEST_CASE("constructing a ref") {
     REQUIRE(Foo::live_objects == 0);
@@ -415,24 +694,6 @@ namespace test {
       }
     }
   }
-
-  /// Ensure it is not possible to default construct a `cpl::ref`.
-  MUST_NOT_COMPILE(Foo, cpl::ref<T>(), "default reference construction");
-
-  /// Ensure it is not possible to explicitly construct a null `cpl::ref`.
-  MUST_NOT_COMPILE(Foo, cpl::ref<T>(nullptr), "explicit null reference construction");
-
-  /// Ensure it is not possible to construct a `cpl::ref` from a raw reference.
-  MUST_NOT_COMPILE(Foo, cpl::ref<T>{(T*)nullptr }, "unsafe reference construction");
-
-  /// Ensure it is not possible to construct a `cpl::ref` to an unrelated type.
-  MUST_NOT_COMPILE(Foo, cpl::ref<T>{ cpl::unsafe_ref<int>(*(int*)nullptr) }, "unrelated reference construction");
-
-  /// Ensure it is not possible to construct a `cpl::ref` to a sub-class.
-  MUST_NOT_COMPILE(Bar, cpl::ref<T>{ cpl::unsafe_ref<Foo>(*(Foo*)nullptr) }, "sub-class reference construction");
-
-  /// Ensure it is not possible to construct a `cpl::ref` to violate `const`-ness.
-  MUST_NOT_COMPILE(Foo, cpl::ref<T>{ cpl::unsafe_ref<const Foo>(*(const Foo*)nullptr) }, "const violation reference construction");
 
   TEST_CASE("casting a ref") {
     REQUIRE(Foo::live_objects == 0);
@@ -650,14 +911,84 @@ namespace test {
     REQUIRE(Foo::live_objects == 0);
   }
 
-  /// Used for @ref MUST_NOT_COMPILE.
-  static Foo s_raw_foo;
-
-  /// Used for @ref MUST_NOT_COMPILE.
-  static cpl::ref<Foo> s_foo_ref{ cpl::unsafe_ref<Foo>(s_raw_foo) };
-
-  /// Ensure there's no implicit conversion from pointer to reference.
-  MUST_NOT_COMPILE(Foo, s_foo_ref = cpl::ptr<T>(), "implicit conversion of pointer to a reference");
+  TEST_CASE("borrowing a shared indirection") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("we have a shared reference") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sref<Bar> bar_sref = cpl::make_sref<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr;
+        bar_ptr = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr;
+        bar_ptr = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(*bar_sref.get());
+        bar_ref = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref{ bar_sref };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(*bar_sref.get());
+        bar_ref = bar_sref;
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    GIVEN("we have a non-null shared pointer") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::sptr<Bar> bar_sptr = cpl::make_sptr<Bar>(foo, bar);
+      REQUIRE(Foo::live_objects == 1);
+      THEN("we can copy it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer") {
+        cpl::ptr<Bar> bar_ptr;
+        bar_ptr = bar_sptr;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can assign it to a borrowed pointer to a base class") {
+        cpl::ptr<Foo> bar_ptr;
+        bar_ptr = bar_sptr;
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference") {
+        cpl::ref<Bar> bar_ref{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+      THEN("we can copy it to a borrowed reference to a base class") {
+        cpl::ref<Foo> bar_ref{ bar_sptr };
+        REQUIRE(Foo::live_objects == 1);
+      }
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
 
   TEST_CASE("borrowing a unique indirection") {
     REQUIRE(Foo::live_objects == 0);
