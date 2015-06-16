@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.14"
+#define CPL_VERSION "0.0.15"
 
 #ifdef DOXYGEN // {
 
@@ -163,7 +163,7 @@ SOFTWARE.
 ///
 /// ## Usage
 ///
-/// To use CPL, simply include @file cpl.hpp and use the types defined in it.
+/// To use CPL, simply include `cpl.hpp` and use the types defined in it.
 ///
 /// ## Types
 ///
@@ -171,15 +171,15 @@ SOFTWARE.
 ///
 /// | Type           | May be null? | Data lifetime is as long as        | Fast implementation is based on  |
 /// | -------------- | ------------ | ---------------------------------- | -------------------------------  |
-/// | `cpl::is<T>`   | No           | The `opt` exists and is not reset  | `T`                              |
-/// | `cpl::opt<T>`  | Yes          | The `is` exists                    | `std::experimental::optional<T>` |
+/// | `cpl::is<T>`   | No           | The `is` exists                    | `T`                              |
+/// | `cpl::opt<T>`  | Yes          | The `opt` exists and is not reset  | `std::experimental::optional<T>` |
 /// | `cpl::uref<T>` | No           | The `uref` exists                  | `std::unique_ptr<T>`             |
 /// | `cpl::uptr<T>` | Yes          | The `uptr` exists and is not reset | `std::unique_ptr<T>`             |
 /// | `cpl::sref<T>` | No           | The `sref` exists                  | `std::shared_ptr<T>`             |
 /// | `cpl::sptr<T>` | Yes          | The `sptr` exists                  | `std::shared_ptr<T>`             |
 /// | `cpl::wptr<T>` | Yes          | Some `sptr` exists                 | `std::weak_ptr<T>`               |
-/// | `cpl::ref<T>`  | No           | Someone else holds the data        | `std::reference_wrapper`         |
-/// | `cpl::ptr<T>`  | Yes          | Someone else holds the data        | `T*`                             |
+/// | `cpl::ref<T>`  | No           | One of the above holds the data    | `std::reference_wrapper`         |
+/// | `cpl::ptr<T>`  | Yes          | One of the above holds the data    | `T*`                             |
 ///
 /// ## Implementation
 ///
@@ -1106,24 +1106,39 @@ namespace cpl {
     return ptr<T>{ from_ptr, unsafe_const_t(0) };
   }
 
-#ifndef CPL_WITHOUT_COLLECTIONS // {
-
-#ifdef DOXYGEN
+#ifdef DOXYGEN // {
   /// A fixed-size vector of bits.
+  ///
+  /// This is compiled to either `std::bitset` or `__gnu_debug::bitset`
+  /// depending on the compilation mode.
   template <size_t N> class bitset {};
 
   /// A mapping from keys to values.
+  ///
+  /// This is compiled to either `std::map` or `__gnu_debug::map` depending on
+  /// the compilation mode.
   template <typename K, typename T, typename C = std::less<K>, typename A = std::allocator<std::pair<const K, T>>> class map {};
 
   /// A set of values.
+  ///
+  /// This is compiled to either `std::set` or `__gnu_debug::set` depending on
+  /// the compilation mode.
   template <typename T, typename C = std::less<T>, typename A = std::allocator<T>> class set {};
 
   /// Just a string.
+  ///
+  /// This is compiled to either `std::string` or `__gnu_debug::string`
+  /// depending on the compilation mode.
   class string {};
 
   /// A dynamic vector of values.
+  ///
+  /// This is compiled to either `std::vector` or `__gnu_debug::vector`
+  /// depending on the compilation mode.
   template <typename T, typename A = std::allocator<T>> class vector {};
-#endif
+#endif // } DOXYGEN
+
+#ifndef CPL_WITHOUT_COLLECTIONS // {
 
 #ifdef CPL_FAST // {
   // Compiles to the standard version of a bitset.
