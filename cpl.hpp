@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.15"
+#define CPL_VERSION "0.0.16"
 
 #ifdef DOXYGEN // {
 
@@ -462,22 +462,32 @@ namespace cpl {
   public:
     /// Unsafe construction from a raw pointer.
     inline sref(T* raw_ptr, unsafe_raw_t) : shared<T>(raw_ptr, unsafe_raw_t(0)) {
+      CPL_ASSERT(shared<T>::get(), "constructing a null reference");
     }
 
     /// Cast construction from a different type of shared indirection.
     template <typename U, typename C> inline sref(const shared<U>& other, C cast_type) : shared<T>(other, cast_type) {
+      CPL_ASSERT(shared<T>::get(), "constructing a null reference");
     }
+
+    /// Allowing this would violate `const`-ness.
+    sref(const sref<T>&) = delete;
+
+    /// Must be explicitly enabled to allow returning values.
+    sref(sref<T>&&) = default;
 
     /// Copy a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline sref(sref<U>& other)
       : shared<T>(other) {
+      CPL_ASSERT(shared<T>::get(), "constructing a null reference");
     }
 
     /// Assign a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline sref& operator=(sref<U>& other) {
       shared<T>::operator=(other);
+      CPL_ASSERT(shared<T>::get(), "assigning a null reference");
       return *this;
     }
 
@@ -485,16 +495,21 @@ namespace cpl {
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     explicit inline sref(const sptr<U>& other)
       : shared<T>(other) {
+      CPL_ASSERT(shared<T>::get(), "constructing a null reference");
     }
 
     /// Access the raw pointer.
     inline const T* get() const {
-      return shared<T>::get();
+      const T* raw_ptr = shared<T>::get();
+      CPL_ASSERT(raw_ptr, "accessing a null reference");
+      return raw_ptr;
     }
 
     /// Access the raw pointer.
     inline T* get() {
-      return shared<T>::get();
+      T* raw_ptr = shared<T>::get();
+      CPL_ASSERT(raw_ptr, "accessing a null reference");
+      return raw_ptr;
     }
   };
 
@@ -581,22 +596,26 @@ namespace cpl {
   public:
     /// Unsafe construction from a raw pointer.
     inline uref(T* raw_ptr, unsafe_raw_t) : unique<T>(raw_ptr, unsafe_raw_t(0)) {
+      CPL_ASSERT(unique<T>::get(), "constructing a null reference");
     }
 
     /// Cast construction from a different type of unique indirection.
     template <typename U, typename C> inline uref(unique<U>&& other, C cast_type) : unique<T>(std::move(other), cast_type) {
+      CPL_ASSERT(unique<T>::get(), "constructing a null reference");
     }
 
     /// Copy a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline uref(uref<U>&& other)
       : unique<T>(std::move(other)) {
+      CPL_ASSERT(unique<T>::get(), "constructing a null reference");
     }
 
     /// Assign a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline uref& operator=(uref<U>&& other) {
       unique<T>::operator=(std::move(other));
+      CPL_ASSERT(unique<T>::get(), "assigning a null reference");
       return *this;
     }
 
@@ -604,6 +623,7 @@ namespace cpl {
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     explicit inline uref(uptr<U>&& other)
       : unique<T>(std::move(other)) {
+      CPL_ASSERT(unique<T>::get(), "constructing a null reference");
     }
 
     /// Access the raw pointer.
@@ -763,6 +783,12 @@ namespace cpl {
     template <typename U, typename C> inline ref(const borrow<U>& other, C cast_type) : borrow<T>(other, cast_type) {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
     }
+
+    /// Allowing this would violate `const`-ness.
+    ref(const ref<T>&) = delete;
+
+    /// Must be explicitly enabled to allow returning values.
+    ref(ref<T>&&) = default;
 
     /// Copy a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
