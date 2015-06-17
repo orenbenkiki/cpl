@@ -255,31 +255,19 @@ namespace test {
       null_ptr = nullptr;                                       \
     }
 
-/* @todo Is there a way to make this work?
-THEN("we can copy it to a const reference") {
-  const cpl::REF<Bar> bar_const_ref_copy{ const_bar_ref_copy };
-  REQUIRE(Foo::live_objects == 1);
-}
-THEN("we can assign it to a const reference") {
-  const cpl::REF<Bar> bar_const_ref_copy = const_bar_ref_copy;
-  REQUIRE(Foo::live_objects == 1);
-}
-*/
-
 /// Ensure attempts for invalid reference construction will fail.
-#define VERIFY_INVALID_REFERENCE_CONSTRUCTION(REF, PTR, MAKE_REF, MAKE_REF_CONST, PASS)                       \
-  MUST_NOT_COMPILE(Foo, CAT(s_foo_, REF) = cpl::PTR<T>(), "implicit conversion of pointer to a reference");   \
-  MUST_NOT_COMPILE(Foo, cpl::REF<T>(), "default reference construction");                                     \
-  MUST_NOT_COMPILE(Foo, cpl::REF<T>(nullptr), "explicit null reference construction");                        \
-  MUST_NOT_COMPILE(Foo, cpl::REF<T>((T*)nullptr), "unsafe reference construction");                           \
-  MUST_NOT_COMPILE(int, cpl::REF<Foo>(MAKE_REF), "unrelated reference construction");                         \
-  MUST_NOT_COMPILE(int, CAT(s_foo_, REF) = (MAKE_REF), "unrelated reference assignment");                     \
-  MUST_NOT_COMPILE(Foo, cpl::REF<Bar>(MAKE_REF), "sub-class reference construction");                         \
-  MUST_NOT_COMPILE(Foo, CAT(s_bar_, REF) = (MAKE_REF), "sub-class reference assignment");                     \
-  MUST_NOT_COMPILE(Foo, cpl::REF<T>(MAKE_REF_CONST), "const violation reference construction");               \
-  MUST_NOT_COMPILE(Foo, CAT(s_foo_, REF) = (MAKE_REF_CONST), "const violation reference assignment");         \
-  MUST_NOT_COMPILE(Foo, cpl::REF<T>(PASS(CAT(s_foo_const_, REF))), "const violation reference construction"); \
-  MUST_NOT_COMPILE(Foo, cpl::REF<T>(PASS(CAT(s_const_foo_, REF))), "const violation reference construction")
+#define VERIFY_INVALID_REFERENCE_CONSTRUCTION(REF, PTR, MAKE_REF, MAKE_REF_CONST, PASS)                     \
+  MUST_NOT_COMPILE(Foo, CAT(s_foo_, REF) = cpl::PTR<T>(), "implicit conversion of pointer to a reference"); \
+  MUST_NOT_COMPILE(Foo, cpl::REF<T>(), "default reference construction");                                   \
+  MUST_NOT_COMPILE(Foo, cpl::REF<T>(nullptr), "explicit null reference construction");                      \
+  MUST_NOT_COMPILE(Foo, cpl::REF<T>((T*)nullptr), "unsafe reference construction");                         \
+  MUST_NOT_COMPILE(int, cpl::REF<Foo>(MAKE_REF), "unrelated reference construction");                       \
+  MUST_NOT_COMPILE(int, CAT(s_foo_, REF) = (MAKE_REF), "unrelated reference assignment");                   \
+  MUST_NOT_COMPILE(Foo, cpl::REF<Bar>(MAKE_REF), "sub-class reference construction");                       \
+  MUST_NOT_COMPILE(Foo, CAT(s_bar_, REF) = (MAKE_REF), "sub-class reference assignment");                   \
+  MUST_NOT_COMPILE(Foo, cpl::REF<T>(MAKE_REF_CONST), "const violation reference construction");             \
+  MUST_NOT_COMPILE(Foo, CAT(s_foo_, REF) = (MAKE_REF_CONST), "const violation reference assignment");       \
+  MUST_NOT_COMPILE(Foo, cpl::REF<T>(PASS(CAT(s_foo_const_, REF))), "const violation reference construction")
 
 /// Ensure attempts for invalid pointer construction will fail.
 #define VERIFY_INVALID_POINTER_CONSTRUCTION(PTR, PASS)                                                     \
@@ -700,49 +688,72 @@ THEN("we can assign it to a const reference") {
     REQUIRE(Foo::live_objects == 0);
   }
 
+/// Use in @ref VERIFY_BORROWING when the value has an implicit cast to a @ref
+/// cpl::ref.
+#define IMPLICIT_ASSIGN_TO_REF(TYPE, VALUE) VALUE
+
+/// Use in @ref VERIFY_BORROWING when the value has an explicit cast to a @ref
+/// cpl::ref.
+#define EXPLICIT_ASSIGN_TO_REF(TYPE, VALUE) cpl::ref<TYPE>(VALUE)
+
+/// Verify we cab borrow something.
+#define VERIFY_BORROWING(ACCESS_VALUE, ASSIGN_TO_REF)                \
+  REQUIRE(Foo::live_objects == 1);                                   \
+  THEN("we can copy it to a borrowed pointer") {                     \
+    cpl::ptr<Bar> bar_ptr{ bar_something };                          \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }                                                                  \
+  THEN("we can assign it to a borrowed pointer") {                   \
+    cpl::ptr<Bar> bar_ptr;                                           \
+    bar_ptr = bar_something;                                         \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }                                                                  \
+  THEN("we can copy it to a borrowed pointer to a base class") {     \
+    cpl::ptr<Foo> bar_ptr{ bar_something };                          \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }                                                                  \
+  THEN("we can assign it to a borrowed pointer to a base class") {   \
+    cpl::ptr<Foo> bar_ptr;                                           \
+    bar_ptr = bar_something;                                         \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }                                                                  \
+  THEN("we can copy it to a borrowed reference") {                   \
+    cpl::ref<Bar> bar_ref{ bar_something };                          \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }                                                                  \
+  THEN("we can assign it to a borrowed reference") {                 \
+    cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(ACCESS_VALUE);      \
+    bar_ref = ASSIGN_TO_REF(Bar, bar_something);                     \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }                                                                  \
+  THEN("we can copy it to a borrowed reference to a base class") {   \
+    cpl::ref<Foo> bar_ref{ bar_something };                          \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }                                                                  \
+  THEN("we can assign it to a borrowed reference to a base class") { \
+    cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(ACCESS_VALUE);      \
+    bar_ref = ASSIGN_TO_REF(Foo, bar_something);                     \
+    REQUIRE(Foo::live_objects == 1);                                 \
+  }
+
   TEST_CASE("borrowing a held value") {
     REQUIRE(Foo::live_objects == 0);
     GIVEN("we have a held reference") {
       int foo = __LINE__;
       int bar = __LINE__;
-      cpl::is<Bar> bar_is{ foo, bar };
-      REQUIRE(Foo::live_objects == 1);
-      THEN("we can copy it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr{ bar_is };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr;
-        bar_ptr = bar_is;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr{ bar_is };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr;
-        bar_ptr = bar_is;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref{ bar_is };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(*bar_is.get());
-        bar_ref = bar_is;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref{ bar_is };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(*bar_is.get());
-        bar_ref = bar_is;
-        REQUIRE(Foo::live_objects == 1);
-      }
+      cpl::is<Bar> bar_something{ foo, bar };
+      VERIFY_BORROWING(bar_something, IMPLICIT_ASSIGN_TO_REF);
+    }
+    REQUIRE(Foo::live_objects == 0);
+  }
+
+  TEST_CASE("borrowing an optional value") {
+    REQUIRE(Foo::live_objects == 0);
+    GIVEN("we have an optional reference") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      cpl::opt<Bar> bar_something{ cpl::in_place, foo, bar };
+      VERIFY_BORROWING(bar_something.value(), EXPLICIT_ASSIGN_TO_REF);
     }
     REQUIRE(Foo::live_objects == 0);
   }
@@ -752,76 +763,14 @@ THEN("we can assign it to a const reference") {
     GIVEN("we have a shared reference") {
       int foo = __LINE__;
       int bar = __LINE__;
-      cpl::sref<Bar> bar_sref = cpl::make_sref<Bar>(foo, bar);
-      REQUIRE(Foo::live_objects == 1);
-      THEN("we can copy it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr{ bar_sref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr;
-        bar_ptr = bar_sref;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr{ bar_sref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr;
-        bar_ptr = bar_sref;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref{ bar_sref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(*bar_sref.get());
-        bar_ref = bar_sref;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref{ bar_sref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(*bar_sref.get());
-        bar_ref = bar_sref;
-        REQUIRE(Foo::live_objects == 1);
-      }
+      cpl::sref<Bar> bar_something = cpl::make_sref<Bar>(foo, bar);
+      VERIFY_BORROWING(*bar_something, IMPLICIT_ASSIGN_TO_REF);
     }
     GIVEN("we have a non-null shared pointer") {
       int foo = __LINE__;
       int bar = __LINE__;
-      cpl::sptr<Bar> bar_sptr = cpl::make_sptr<Bar>(foo, bar);
-      REQUIRE(Foo::live_objects == 1);
-      THEN("we can copy it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr{ bar_sptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr;
-        bar_ptr = bar_sptr;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr{ bar_sptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr;
-        bar_ptr = bar_sptr;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref{ bar_sptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref{ bar_sptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
+      cpl::sptr<Bar> bar_something = cpl::make_sptr<Bar>(foo, bar);
+      VERIFY_BORROWING(*bar_something, EXPLICIT_ASSIGN_TO_REF);
     }
     REQUIRE(Foo::live_objects == 0);
   }
@@ -831,76 +780,14 @@ THEN("we can assign it to a const reference") {
     GIVEN("we have a unique reference") {
       int foo = __LINE__;
       int bar = __LINE__;
-      cpl::uref<Bar> bar_uref = cpl::make_uref<Bar>(foo, bar);
-      REQUIRE(Foo::live_objects == 1);
-      THEN("we can copy it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr{ bar_uref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr;
-        bar_ptr = bar_uref;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr{ bar_uref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr;
-        bar_ptr = bar_uref;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref{ bar_uref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(*bar_uref.get());
-        bar_ref = bar_uref;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref{ bar_uref };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(*bar_uref.get());
-        bar_ref = bar_uref;
-        REQUIRE(Foo::live_objects == 1);
-      }
+      cpl::uref<Bar> bar_something = cpl::make_uref<Bar>(foo, bar);
+      VERIFY_BORROWING(*bar_something, IMPLICIT_ASSIGN_TO_REF);
     }
     GIVEN("we have a non-null unique pointer") {
       int foo = __LINE__;
       int bar = __LINE__;
-      cpl::uptr<Bar> bar_uptr = cpl::make_uptr<Bar>(foo, bar);
-      REQUIRE(Foo::live_objects == 1);
-      THEN("we can copy it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr{ bar_uptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer") {
-        cpl::ptr<Bar> bar_ptr;
-        bar_ptr = bar_uptr;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr{ bar_uptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can assign it to a borrowed pointer to a base class") {
-        cpl::ptr<Foo> bar_ptr;
-        bar_ptr = bar_uptr;
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference") {
-        cpl::ref<Bar> bar_ref{ bar_uptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
-      THEN("we can copy it to a borrowed reference to a base class") {
-        cpl::ref<Foo> bar_ref{ bar_uptr };
-        REQUIRE(Foo::live_objects == 1);
-      }
+      cpl::uptr<Bar> bar_something = cpl::make_uptr<Bar>(foo, bar);
+      VERIFY_BORROWING(*bar_something, EXPLICIT_ASSIGN_TO_REF);
     }
     REQUIRE(Foo::live_objects == 0);
   }

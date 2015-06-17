@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.16"
+#define CPL_VERSION "0.0.18"
 
 #ifdef DOXYGEN // {
 
@@ -69,7 +69,7 @@ SOFTWARE.
 /// If this is defined, the safe (slow) variant will be compiled.
 #define CPL_SAFE
 
-/// If this is defined, do not provide the `cpl` version of the standard
+/// If this is defined, do not provide the @ref cpl version of the standard
 /// collections, and do not even include their header files.
 #define CPL_WITHOUT_COLLECTIONS
 
@@ -171,15 +171,15 @@ SOFTWARE.
 ///
 /// | Type           | May be null? | Data lifetime is as long as        | Fast implementation is based on  |
 /// | -------------- | ------------ | ---------------------------------- | -------------------------------  |
-/// | `cpl::is<T>`   | No           | The `is` exists                    | `T`                              |
-/// | `cpl::opt<T>`  | Yes          | The `opt` exists and is not reset  | `std::experimental::optional<T>` |
-/// | `cpl::uref<T>` | No           | The `uref` exists                  | `std::unique_ptr<T>`             |
-/// | `cpl::uptr<T>` | Yes          | The `uptr` exists and is not reset | `std::unique_ptr<T>`             |
-/// | `cpl::sref<T>` | No           | The `sref` exists                  | `std::shared_ptr<T>`             |
-/// | `cpl::sptr<T>` | Yes          | The `sptr` exists                  | `std::shared_ptr<T>`             |
-/// | `cpl::wptr<T>` | Yes          | Some `sptr` exists                 | `std::weak_ptr<T>`               |
-/// | `cpl::ref<T>`  | No           | One of the above holds the data    | `std::reference_wrapper`         |
-/// | `cpl::ptr<T>`  | Yes          | One of the above holds the data    | `T*`                             |
+/// | @ref cpl::is   | No           | The `is` exists                    | `T`                              |
+/// | @ref cpl::opt  | Yes          | The `opt` exists and is not reset  | `std::experimental::optional<T>` |
+/// | @ref cpl::uref | No           | The `uref` exists                  | `std::unique_ptr<T>`             |
+/// | @ref cpl::uptr | Yes          | The `uptr` exists and is not reset | `std::unique_ptr<T>`             |
+/// | @ref cpl::sref | No           | The `sref` exists                  | `std::shared_ptr<T>`             |
+/// | @ref cpl::sptr | Yes          | The `sptr` exists                  | `std::shared_ptr<T>`             |
+/// | @ref cpl::wptr | Yes          | Some `sptr` exists                 | `std::weak_ptr<T>`               |
+/// | @ref cpl::ref  | No           | One of the above holds the data    | `std::reference_wrapper`         |
+/// | @ref cpl::ptr  | Yes          | One of the above holds the data    | `T*`                             |
 ///
 /// ## Implementation
 ///
@@ -194,34 +194,41 @@ SOFTWARE.
 ///
 /// ## Interface
 ///
+/// The interface of the CPL types is as close as possible to the interface of
+/// the types they are based on. Note that the base types have somewhat
+/// inconsistent interface; for example, only `opt` has `value_or`, and
+/// only the `const`-ness of `is` and `opt` is reflected in the accessed value
+/// (that is, a `const ref<T>` is not the same as `ref<const T>`).
+///
 /// All the pointer-like types provide the usual `operator*`, `operator->` and
-/// `operator bool` operators, as well as `get`, `value`, and `value_or` (which
-/// behaves in the same way as for `std::experimental::optional`). The
-/// `const`-ness of the pointer-like does not effect the `const`-ness of the
-/// result (except for `opt` which holds the data internally).
+/// `operator bool` operators, and sometimes also well as `get`, `value`, and
+/// `value_or`. The reference types provide the same interface, minus `operator
+/// bool`, and with the addition of `operator T&`.
 ///
-/// All the reference-like types also provide `operator*`, `operator->` and
-/// `operator T&`, as well as `get` and `value`. The `const`-ness of the
-/// reference does effect the `const-ness of the result.
+/// It would have been nice to have a consistent interface for the different
+/// types, but it was deemed more important to stay as close as possible to
+/// the standard types.
 ///
-/// The interface of `wptr` is identical to `std::weak_ptr`, that is, it isn't
-/// really a pointer but it allows to obtain an `sptr` (which may be null).
-///
-/// Having a uniform interface for all the types makes it more convenient to
-/// interchangeably use the different types. Providing `operator->` for
-/// references seems strange, but as long as we can't override `operator.` then
-/// this is the only way to get convenient access to the data members of the
-/// value being referred to.
+/// For a semblance of consistency, @ref cpl::ptr and @ref cpl::ref have a
+/// similar interface to @ref cpl::sref and @ref cpl::uref, which are in turn
+/// similar to @ref cpl::sptr and @ref cpl::uptr - for example, they also
+/// provides a `get`. This means that all the "reference" types, @ref cpl::ref
+/// included, are more like a guaranteed-non-null-`T*` than a `T&`. This is
+/// also reflected in the fact that `const`-ness of the CPL type does not mean
+/// `const`-ness of the accessed value. It is very difficult to create a "smart
+/// reference" type in C++ as it is at the time of writing this (C++14). At
+/// least there's some comfort in knowing that `->` will always work to access
+/// the data members.
 ///
 /// ## Casting
 ///
-/// CPL provides `cpl::cast_static`, `cpl::cast_dynamic`,
-/// `cpl::cast_reinterpret` and `cpl::cast_const` which work on all the CPL
-/// types (except for `cpl::wptr`). The safe `cpl::cast_static` verifies that
-/// it gives the same results as `cpl::cast_dynamic`. This will only fail if
-/// there are virtual base classes involved, in which case you should use the
-/// more costly `cpl::cast_dynamic`. Other than this, CPL lets you freely shoot
-/// yourself in the foot using the casts.
+/// CPL provides @ref cpl::cast_static, @ref cpl::cast_dynamic, @ref
+/// cpl::cast_reinterpret and @ref cpl::cast_const which work on all the CPL
+/// types. The safe @ref cpl::cast_static verifies that it gives the same
+/// results as @ref cpl::cast_dynamic. This will only fail if there are virtual
+/// base classes involved, in which case you should use the more costly
+/// `cpl::cast_dynamic`. Other than this, CPL lets you freely shoot yourself in
+/// the foot using the casts.
 ///
 /// The names are all reversed since the normal names are keywords making them
 /// impossible to use as function names.
@@ -256,9 +263,9 @@ SOFTWARE.
 /// ## Collections
 ///
 /// Unless @ref CPL_WITHOUT_COLLECTIONS is defined, then CPL will provide the
-/// `cpl::bitset`, `cpl::map`, `cpl::set`, `cpl::string` and `cpl::vector`
-/// types. These will compile to the standard versions in fast mode and to the
-/// (G++ specific) debug versions in safe mode.
+/// @ref cpl::bitset, @ref cpl::map, @ref cpl::set, @ref cpl::string and @ref
+/// cpl::vector types. These will compile to the standard versions in fast mode
+/// and to the (G++ specific) debug versions in safe mode.
 ///
 /// Using these types instead of the `std` types will provide additional checks
 /// in safe mode, detecting out-of-bounds and similar errors, while having zero
@@ -295,12 +302,13 @@ namespace cpl {
     }
   };
 
-  /// A fast (unsafe) holder of some value.
-  template <typename T> class is {
-  protected:
-    /// The held value.
-    T m_value;
-
+  /// A holder of some value.
+  ///
+  /// This allows creation of @ref cpl::ptr and @ref cpl::ref to the value. It
+  /// is annoying we need to wrap the value in a class for this. Deriving from
+  /// `T` makes it a bit easier to suffer, but also means that `T` can't be a
+  /// primitive type.
+  template <typename T> class is : public T {
 #ifdef CPL_SAFE // {
     template <typename U> friend class borrow;
 
@@ -312,18 +320,81 @@ namespace cpl {
     /// Reuse the held value constructors.
     template <typename... Args>
     inline is(Args&&... args)
-      : m_value(std::forward<Args>(args)...)
+      : T(std::forward<Args>(args)...)
 #ifdef CPL_SAFE // {
         ,
-        m_shared_ptr(&m_value, no_delete<T>())
+        m_shared_ptr((T*)this, no_delete<T>())
 #endif // } CPL_SAFE
     {
     }
 
-    /// Access the raw pointer.
-    inline T* get() {
-      return &m_value;
+    // Use the `T` assignment operator as is, that is, do not change the
+    // `m_shared_ptr`.
+    using T::operator=;
+
+#ifdef DOXYGEN
+    /// Doxygen 1.8.5 gets confused and thinks @ref T::operator is a type.
+    struct T {
+      /// Doxygen 1.8.5 gets confused and thinks this is a type.
+      typedef void operator;
+    };
+#endif
+  };
+
+  /// Allow convenient access to `std::experimental::in_place`.
+  constexpr std::experimental::in_place_t in_place{};
+
+  /// A holder of some optional value.
+  template <typename T> class opt : public std::experimental::optional<T> {
+#ifdef CPL_SAFE // {
+    template <typename U> friend class borrow;
+
+    /// Track the lifetime of the data.
+    std::shared_ptr<T> m_shared_ptr;
+
+  public:
+    /// Reuse the optional value constructors.
+    template <typename... Args>
+    inline opt(Args&&... args)
+      : std::experimental::optional<T>(std::forward<Args>(args)...),
+        m_shared_ptr(*this ? &this->value() : (T*)nullptr, no_delete<T>()) {
     }
+
+    /// Reuse the optional value assignment.
+    template <typename... Args> inline opt& operator=(Args&&... args) {
+      std::experimental::optional<T>::operator=(std::forward<Args>(args)...);
+      if (*this) {
+        m_shared_ptr.reset(&*this, no_delete<T>());
+      } else {
+        m_shared_ptr.reset();
+      }
+      return *this;
+    }
+#else  // } CPL_SAFE {
+    using std::experimental::optional<T>::optional;
+
+  public:
+    // The following are faster than the standard implementation, since we rely
+    // on the safe mode to do the verifications for us.
+
+    /// Fast (unchecked) access to the value.
+    T& value() {
+      return std::experimental::optional<T>::operator*();
+    }
+
+    /// Fast (unchecked) access to the value.
+    const T& value() const {
+      return std::experimental::optional<T>::operator*();
+    }
+#endif // } CPL_SAFE
+
+    /// Make the optional value empty.
+    void reset() {
+      std::experimental::optional<T>::operator=(std::experimental::nullopt);
+#ifdef CPL_SAFE // {
+      m_shared_ptr.reset();
+#endif // } CPL_SAFE
+    };
   };
 
   /// An additional parameter for unsafe raw pointer operations.
@@ -470,25 +541,11 @@ namespace cpl {
       CPL_ASSERT(shared<T>::get(), "constructing a null reference");
     }
 
-    /// Allowing this would violate `const`-ness.
-    sref(const sref<T>&) = delete;
-
-    /// Must be explicitly enabled to allow returning values.
-    sref(sref<T>&&) = default;
-
     /// Copy a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline sref(sref<U>& other)
+    inline sref(const sref<U>& other)
       : shared<T>(other) {
       CPL_ASSERT(shared<T>::get(), "constructing a null reference");
-    }
-
-    /// Assign a reference.
-    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline sref& operator=(sref<U>& other) {
-      shared<T>::operator=(other);
-      CPL_ASSERT(shared<T>::get(), "assigning a null reference");
-      return *this;
     }
 
     /// Copy a pointer.
@@ -513,11 +570,18 @@ namespace cpl {
     }
   };
 
+  /// A weak way to obtain a shared pointer.
+  template <typename T> using wptr = std::weak_ptr<T>;
+
   /// An indirection that deletes the data when it is deleted.
   template <typename T> class unique : public std::unique_ptr<T> {
     template <typename U> friend class unique;
 #ifdef CPL_SAFE // {
+
+#ifndef DOXYGEN // {
+    // Doxygen 1.8.5 gets terribly confused by this statement.
     template <typename U> friend class borrow;
+#endif // } DOXYGEN
 
   protected:
     /// Track the lifetime of the data.
@@ -703,7 +767,21 @@ namespace cpl {
     inline borrow(is<U>& other)
       :
 #ifdef CPL_FAST // {
-        m_raw_ptr(other.get())
+        m_raw_ptr((T*)&other)
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+        m_unsafe_ptr(),
+        m_weak_ptr(other.m_shared_ptr)
+#endif // } CPL_SAFE
+    {
+    }
+
+    /// Construction from an optional value.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline borrow(opt<U>& other)
+      :
+#ifdef CPL_FAST // {
+        m_raw_ptr((T*)&other)
 #endif          // } CPL_FAST
 #ifdef CPL_SAFE // {
         m_unsafe_ptr(),
@@ -784,25 +862,11 @@ namespace cpl {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
     }
 
-    /// Allowing this would violate `const`-ness.
-    ref(const ref<T>&) = delete;
-
-    /// Must be explicitly enabled to allow returning values.
-    ref(ref<T>&&) = default;
-
     /// Copy a reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref(ref<U>& other)
+    inline ref(const ref<U>& other)
       : borrow<T>(other) {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-    }
-
-    /// Assign a reference.
-    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref& operator=(ref<U>& other) {
-      borrow<T>::operator=(other);
-      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
-      return *this;
     }
 
     /// Copy a pointer.
@@ -818,26 +882,25 @@ namespace cpl {
       : borrow<T>(other) {
     }
 
-    /// Assign from a held value.
+    /// Construct from an optional value.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref& operator=(is<U>& other) {
+    inline ref(opt<U>& other)
+      : borrow<T>(other) {
+      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
+
+    /// Assign from an optional value.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline ref& operator=(opt<U>& other) {
       borrow<T>::operator=(other);
       return *this;
     }
 
     /// Copy a shared reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref(sref<U>& other)
+    inline ref(const sref<U>& other)
       : borrow<T>(other) {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-    }
-
-    /// Assign from a shared reference.
-    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref& operator=(sref<U>& other) {
-      borrow<T>::operator=(other);
-      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
-      return *this;
     }
 
     /// Copy a unique pointer.
@@ -849,17 +912,9 @@ namespace cpl {
 
     /// Copy a unique reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref(uref<U>& other)
+    inline ref(const uref<U>& other)
       : borrow<T>(other) {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-    }
-
-    /// Assign from a unique reference.
-    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref& operator=(uref<U>& other) {
-      borrow<T>::operator=(other);
-      CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "assigning a null reference");
-      return *this;
     }
 
     /// Copy a unique pointer.
@@ -964,6 +1019,21 @@ namespace cpl {
     return sptr<T>{ from_ptr, unsafe_static_t(0) };
   }
 
+  /// A static cast between pointer types.
+  ///
+  /// In safe mode, this verifies that the raw pointer value did not change,
+  /// which will always be true unless you use virtual base classes.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline wptr<T> cast_static(const wptr<U>& from_ptr) {
+#ifdef CPL_SAFE // {
+    U* from_raw = from_ptr.lock().get();
+    T* to_dynamic = dynamic_cast<T*>(from_raw);
+    T* to_raw = static_cast<T*>(from_raw);
+    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+#endif // } CPL_SAFE
+    return wptr<T>{ from_ptr, unsafe_static_t(0) };
+  }
+
   /// A static cast between reference types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
@@ -1036,6 +1106,12 @@ namespace cpl {
     return sptr<T>{ from_ptr, unsafe_raw_t(0) };
   }
 
+  /// A reinterpret cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline wptr<T> cast_reinterpret(const wptr<U>& from_ptr) {
+    return wptr<T>{ from_ptr, unsafe_raw_t(0) };
+  }
+
   /// A reinterpret cast between reference types.
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   inline uref<T> cast_reinterpret(uref<U>&& from_ref) {
@@ -1072,6 +1148,12 @@ namespace cpl {
     return sptr<T>{ from_ptr, unsafe_dynamic_t(0) };
   }
 
+  /// A dynamic cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline wptr<T> cast_dynamic(const wptr<U>& from_ptr) {
+    return wptr<T>{ from_ptr, unsafe_dynamic_t(0) };
+  }
+
   /// A dynamic cast between reference types.
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   inline uref<T> cast_dynamic(uref<U>&& from_ref) {
@@ -1106,6 +1188,12 @@ namespace cpl {
   template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
   inline sptr<T> cast_const(const sptr<U>& from_ptr) {
     return sptr<T>{ from_ptr, unsafe_const_t(0) };
+  }
+
+  /// A const cast between pointer types.
+  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
+  inline wptr<T> cast_const(const wptr<U>& from_ptr) {
+    return wptr<T>{ from_ptr, unsafe_const_t(0) };
   }
 
   /// A const cast between reference types.
