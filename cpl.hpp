@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.1.1"
+#define CPL_VERSION "0.1.2"
 
 #ifdef DOXYGEN // {
 
@@ -202,7 +202,14 @@ SOFTWARE.
 ///
 /// All the pointer-like types provide the usual `operator*`, `operator->` and
 /// `operator bool` operators, and sometimes also well as `get`, `value`, and
-/// `value_or`. The reference types provide the same interface, minus `operator
+/// `value_or` (if these are provided by the relevant standard type).
+///
+/// In addition, `cpl::ptr` provide `ref` and `ref_or` methods. These are more
+/// efficient than `value` and `value_or` since they just return a reference;
+/// using CPL types we avoid the reference-to-deleted-temporary-object problem
+/// that prevented `value_or` from returning a reference.
+///
+/// The reference types provide the same interface, minus `operator
 /// bool`, and with the addition of `operator T&`.
 ///
 /// It would have been nice to have a consistent interface for the different
@@ -370,24 +377,12 @@ namespace cpl {
       }
       return *this;
     }
-#else  // } CPL_SAFE {
+#else // } CPL_SAFE {
     using std::experimental::optional<T>::optional;
 
-  public:
-    // The following are faster than the standard implementation, since we rely
-    // on the safe mode to do the verifications for us.
-
-    /// Fast (unchecked) access to the value.
-    T& value() {
-      return std::experimental::optional<T>::operator*();
-    }
-
-    /// Fast (unchecked) access to the value.
-    const T& value() const {
-      return std::experimental::optional<T>::operator*();
-    }
 #endif // } CPL_SAFE
 
+  public:
     /// Make the optional value empty.
     void reset() {
       std::experimental::optional<T>::operator=(std::experimental::nullopt);
@@ -978,6 +973,9 @@ namespace cpl {
     }
   };
 
+  // Forward declare for the `ref` method.
+  template <typename T> class ref;
+
   /// A pointer for data whose lifetime is determined elsewhere.
   template <typename T> class ptr : public borrow<T> {
     using borrow<T>::borrow;
@@ -996,6 +994,26 @@ namespace cpl {
     /// Test whether the pointer is not null.
     inline operator bool() const {
       return !!borrow<T>::get();
+    }
+
+    /// Provide a reference to the value (which must exist).
+    inline ::cpl::ref<T> ref() {
+      return ::cpl::ref<T>(*this);
+    }
+
+    /// Provide a reference to the value (which must exist).
+    inline ::cpl::ref<const T> ref() const {
+      return ::cpl::ref<T>(*this);
+    }
+
+    /// Access the current value or, if empty, a default value.
+    inline ::cpl::ref<T> ref_or(const ::cpl::ref<T>& if_empty) {
+      return *this ? ref() : if_empty;
+    }
+
+    /// Access the current value or, if empty, a default value.
+    inline ::cpl::ref<const T> ref_or(const ::cpl::ref<const T>& if_empty) const {
+      return *this ? ref() : if_empty;
     }
   };
 

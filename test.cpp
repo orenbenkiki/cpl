@@ -872,6 +872,40 @@ namespace test {
       cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
       REQUIRE(Foo::live_objects == 1);
       VERIFY_CONVERTING_PTR_TO_REF(ref, ptr, COPY);
+      THEN("we can ask it for a reference") {
+        cpl::ref<Bar> bar_ref = bar_ptr.ref();
+        REQUIRE(Foo::live_objects == 1);
+        VERIFY_VALID_PTR(bar_ptr);
+        VERIFY_VALID_REF(bar_ref);
+      }
+      THEN("asking it for a ref-or will return the original data") {
+        int foo_alternate = __LINE__;
+        int bar_alternate = __LINE__;
+        Bar raw_bar_alternate{ foo, bar };
+        cpl::ref<Bar> bar_ref_alternate{ cpl::unsafe_ref<Bar>(raw_bar_alternate) };
+        REQUIRE(Foo::live_objects == 2);
+        cpl::ref<Bar> bar_ref = bar_ptr.ref_or(bar_ref_alternate);
+        REQUIRE(Foo::live_objects == 2);
+        VERIFY_VALID_PTR(bar_ptr);
+        VERIFY_VALID_REF(bar_ref);
+      }
+    }
+    GIVEN("a null pointer") {
+      cpl::ptr<Bar> bar_ptr;
+      REQUIRE(Foo::live_objects == 0);
+      THEN("asking it for a reference will be " CPL_VARIANT) {
+        REQUIRE_CPL_THROWS(bar_ptr.ref());
+      }
+      THEN("asking it for a ref-or will return the alternate data") {
+        int foo = __LINE__;
+        int bar = __LINE__;
+        Bar raw_bar_alternate{ foo, bar };
+        cpl::ref<Bar> bar_ref_alternate{ cpl::unsafe_ref<Bar>(raw_bar_alternate) };
+        REQUIRE(Foo::live_objects == 1);
+        cpl::ref<Bar> bar_ref = bar_ptr.ref_or(bar_ref_alternate);
+        REQUIRE(Foo::live_objects == 1);
+        VERIFY_VALID_REF(bar_ref);
+      }
     }
     REQUIRE(Foo::live_objects == 0);
   }
