@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.0.18"
+#define CPL_VERSION "0.0.19"
 
 #ifdef DOXYGEN // {
 
@@ -602,6 +602,27 @@ namespace cpl {
       shared<T>::operator=(std::move(other));
       return *this;
     }
+
+    /// Forbid clearing the reference.
+    void reset() = delete;
+
+    /// Forbid clearing the reference.
+    template <typename U> void reset(U* raw_ptr) {
+      shared<T>::reset(raw_ptr);
+      CPL_ASSERT(shared<T>::get(), "resetting a null reference");
+    }
+
+    /// Forbid clearing the reference.
+    template <typename U, typename D> void reset(U* raw_ptr, D deleter) {
+      shared<T>::reset(raw_ptr, deleter);
+      CPL_ASSERT(shared<T>::get(), "resetting a null reference");
+    }
+
+    /// Forbid clearing the reference.
+    template <typename U, typename D, typename A> void reset(U* raw_ptr, D deleter, A allocator) {
+      shared<T>::reset(raw_ptr, deleter, allocator);
+      CPL_ASSERT(shared<T>::get(), "resetting a null reference");
+    }
   };
 
   /// A weak way to obtain a shared pointer.
@@ -669,6 +690,22 @@ namespace cpl {
     }
 
 #ifdef CPL_SAFE // {
+    /// Track reset of the indirection.
+    void reset(T* raw_ptr = nullptr) {
+      std::unique_ptr<T>::reset(raw_ptr);
+      m_shared_ptr.reset(raw_ptr);
+    }
+#endif // } CPL_SAFE
+
+    /// Track swap of the indirection.
+    inline void swap(unique<T>& other) {
+      std::unique_ptr<T>::swap(other);
+#ifdef CPL_SAFE // {
+      m_shared_ptr.swap(other.m_shared_ptr);
+#endif // } CPL_SAFE
+    }
+
+#ifdef CPL_SAFE // {
     /// Access the value.
     inline T& operator*() const {
       T* raw_ptr = std::unique_ptr<T>::get();
@@ -685,6 +722,9 @@ namespace cpl {
 #endif // } CPL_SAFE
   };
 
+  // Forward declare for `swap`.
+  template <typename T> class uref;
+
   /// A pointer that deletes the data when it is deleted.
   template <typename T> class uptr : public unique<T> {
     template <typename U> friend class ptr;
@@ -698,6 +738,18 @@ namespace cpl {
     /// Explicit null constructor.
     inline uptr(nullptr_t) : uptr() {
     }
+
+#ifdef CPL_SAFE // {
+    /// Allow @ref cpl::uref to catch swaps.
+    inline void swap(cpl::uref<T>& other) {
+      other.swap(*this);
+    }
+
+    /// Allow swapping with @ref cpl::uptr as well.
+    inline void swap(uptr<T>& other) {
+      unique<T>::swap(other);
+    }
+#endif // } CPL_SAFE
   };
 
   /// A reference that deletes the data when it is deleted.
@@ -738,6 +790,21 @@ namespace cpl {
     explicit inline uref(uptr<U>&& other)
       : unique<T>(std::move(other)) {
       CPL_ASSERT(unique<T>::get(), "constructing a null reference");
+    }
+
+    /// Forbid clearing the reference.
+    void reset() = delete;
+
+    /// Forbid clearing the reference.
+    void reset(T* raw_ptr) {
+      unique<T>::reset(raw_ptr);
+      CPL_ASSERT(unique<T>::get(), "constructing a null reference");
+    }
+
+    /// Forbid clearing the reference.
+    inline void swap(unique<T>& other) {
+      unique<T>::swap(other);
+      CPL_ASSERT(unique<T>::get(), "swapping a null reference");
     }
   };
 
