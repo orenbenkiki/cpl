@@ -512,6 +512,28 @@ namespace cpl {
     inline shared(const shared<U>& other)
       : std::shared_ptr<T>(other) {
     }
+
+    /// Move construction from a compatible type of shared indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline shared(shared<U>&& other)
+      : std::shared_ptr<T>(std::move(other)) {
+    }
+
+#ifdef CPL_SAFE // {
+    /// Access the value.
+    inline T& operator*() const {
+      T* raw_ptr = std::shared_ptr<T>::get();
+      CPL_ASSERT(raw_ptr, "dereferencing a null pointer");
+      return *raw_ptr;
+    }
+
+    /// Access a data member.
+    inline T* operator->() const {
+      T* raw_ptr = std::shared_ptr<T>::get();
+      CPL_ASSERT(raw_ptr, "dereferencing a null pointer");
+      return raw_ptr;
+    }
+#endif // } CPL_SAFE
   };
 
   /// A pointer that uses reference counting.
@@ -525,6 +547,19 @@ namespace cpl {
 
     /// Explicit null constructor.
     inline sptr(nullptr_t) : sptr() {
+    }
+
+    /// Take ownership from another shared indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline sptr(shared<U>&& other)
+      : shared<T>(std::move(other)) {
+    }
+
+    /// Take ownership from another shared indirection.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline sptr<T>& operator=(shared<U>&& other) {
+      shared<T>::operator=(std::move(other));
+      return *this;
     }
   };
 
@@ -555,18 +590,17 @@ namespace cpl {
       CPL_ASSERT(shared<T>::get(), "constructing a null reference");
     }
 
-    /// Access the raw pointer.
-    inline const T* get() const {
-      const T* raw_ptr = shared<T>::get();
-      CPL_ASSERT(raw_ptr, "accessing a null reference");
-      return raw_ptr;
+    /// Take ownership from another shared reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline sref(sref<U>&& other)
+      : shared<T>(std::move(other)) {
     }
 
-    /// Access the raw pointer.
-    inline T* get() {
-      T* raw_ptr = shared<T>::get();
-      CPL_ASSERT(raw_ptr, "accessing a null reference");
-      return raw_ptr;
+    /// Take ownership from another shared reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline sref<T>& operator=(sref<U>&& other) {
+      shared<T>::operator=(std::move(other));
+      return *this;
     }
   };
 
@@ -633,6 +667,22 @@ namespace cpl {
 #endif // } CPL_SAFE
       return *this;
     }
+
+#ifdef CPL_SAFE // {
+    /// Access the value.
+    inline T& operator*() const {
+      T* raw_ptr = std::unique_ptr<T>::get();
+      CPL_ASSERT(raw_ptr, "dereferencing a null pointer");
+      return *raw_ptr;
+    }
+
+    /// Access a data member.
+    inline T* operator->() const {
+      T* raw_ptr = std::unique_ptr<T>::get();
+      CPL_ASSERT(raw_ptr, "dereferencing a null pointer");
+      return raw_ptr;
+    }
+#endif // } CPL_SAFE
   };
 
   /// A pointer that deletes the data when it is deleted.
@@ -689,16 +739,6 @@ namespace cpl {
       : unique<T>(std::move(other)) {
       CPL_ASSERT(unique<T>::get(), "constructing a null reference");
     }
-
-    /// Access the raw pointer.
-    inline const T* get() const {
-      return unique<T>::get();
-    }
-
-    /// Access the raw pointer.
-    inline T* get() {
-      return unique<T>::get();
-    }
   };
 
   /// An indirection for data whose lifetime is determined elsewhere.
@@ -749,7 +789,7 @@ namespace cpl {
 
     /// Copy a borrow.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline borrow(borrow<U> other)
+    inline borrow(const borrow<U>& other)
       :
 #ifdef CPL_FAST // {
         m_raw_ptr(other.m_raw_ptr)
@@ -760,6 +800,20 @@ namespace cpl {
         m_weak_ptr(m_unsafe_ptr ? m_unsafe_ptr : other.m_weak_ptr.lock())
 #endif // } CPL_SAFE
     {
+    }
+
+    /// Move a borrow.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline borrow& operator=(borrow<U>&& other) {
+#ifdef CPL_FAST // {
+      m_raw_ptr = other.m_raw_ptr;
+      other.m_raw_ptr = nullptr;
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+      m_unsafe_ptr = std::move(other.m_unsafe_ptr);
+      m_weak_ptr = std::move(other.m_weak_ptr);
+#endif // } CPL_SAFE
+      return *this;
     }
 
     /// Construction from a held value.
@@ -817,6 +871,44 @@ namespace cpl {
 #endif // } CPL_SAFE
     {
     }
+
+    /// Access the raw pointer.
+    ///
+    /// In safe mode, this isn't as safe as we'd like it to be, since another
+    /// thread may delete the value between the time we `return` and the time
+    /// the caller uses the value.
+    inline T* get() const {
+#ifdef CPL_FAST // {
+      return m_raw_ptr;
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+      return m_weak_ptr.lock().get();
+#endif // } CPL_SAFE
+    }
+
+    /// Access the value.
+    inline T& operator*() const {
+#ifdef CPL_FAST // {
+      return *get();
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+      T* raw_ptr = get();
+      CPL_ASSERT(raw_ptr, "dereferencing a null borrow");
+      return *raw_ptr;
+#endif // } CPL_SAFE
+    }
+
+    /// Access a data member.
+    inline T* operator->() const {
+#ifdef CPL_FAST // {
+      return get();
+#endif          // } CPL_FAST
+#ifdef CPL_SAFE // {
+      T* raw_ptr = get();
+      CPL_ASSERT(raw_ptr, "dereferencing a null borrow");
+      return raw_ptr;
+#endif // } CPL_SAFE
+    }
   };
 
   /// A pointer for data whose lifetime is determined elsewhere.
@@ -834,18 +926,9 @@ namespace cpl {
     inline ptr(nullptr_t) : ptr() {
     }
 
-    /// Access the raw pointer.
-    ///
-    /// In safe mode, this isn't as safe as we'd like it to be, since another
-    /// thread may delete the value between the time we `return` and the time
-    /// the caller uses the value.
-    inline T* get() const {
-#ifdef CPL_FAST // {
-      return borrow<T>::m_raw_ptr;
-#endif          // } CPL_FAST
-#ifdef CPL_SAFE // {
-      return borrow<T>::m_weak_ptr.lock().get();
-#endif // } CPL_SAFE
+    /// Test whether the pointer is not null.
+    inline operator bool() const {
+      return !!borrow<T>::get();
     }
   };
 
@@ -922,30 +1005,6 @@ namespace cpl {
     explicit inline ref(const uptr<U>& other)
       : borrow<T>(other) {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
-    }
-
-    /// Access the raw pointer.
-    inline const T* get() const {
-#ifdef CPL_FAST // {
-      return borrow<T>::m_raw_ptr;
-#endif          // } CPL_FAST
-#ifdef CPL_SAFE // {
-      const T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
-      CPL_ASSERT(raw_ptr, "accessing a null reference");
-      return raw_ptr;
-#endif // } CPL_SAFE
-    }
-
-    /// Access the raw pointer.
-    inline T* get() {
-#ifdef CPL_FAST // {
-      return borrow<T>::m_raw_ptr;
-#endif          // } CPL_FAST
-#ifdef CPL_SAFE // {
-      const T* raw_ptr = borrow<T>::m_weak_ptr.lock().get();
-      CPL_ASSERT(raw_ptr, "accessing a null reference");
-      return raw_ptr;
-#endif // } CPL_SAFE
     }
   };
 
