@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.1.3"
+#define CPL_VERSION "0.1.4"
 
 #ifdef DOXYGEN // {
 
@@ -1028,6 +1028,31 @@ namespace cpl {
 #endif // } CPL_SAFE
     }
   };
+
+/// Compare borrowed indirections.
+#define CPL_COMPARE_BORROW(OPERATOR)                                                                                     \
+  template <typename T, typename U> inline bool operator OPERATOR(const borrow<T>& lhs, const borrow<U>& rhs) noexcept { \
+    return lhs.get() OPERATOR rhs.get();                                                                                 \
+  }                                                                                                                      \
+  template <typename T, typename U> inline bool operator OPERATOR(const borrow<T>& lhs, U* rhs) noexcept {               \
+    return lhs.get() OPERATOR rhs;                                                                                       \
+  }                                                                                                                      \
+  template <typename T, typename U> inline bool operator OPERATOR(T* lhs, const borrow<U>& rhs) noexcept {               \
+    return lhs OPERATOR rhs.get();                                                                                       \
+  }                                                                                                                      \
+  template <typename T> inline bool operator OPERATOR(const borrow<T>& lhs, nullptr_t) noexcept {                        \
+    return lhs.get() OPERATOR nullptr;                                                                                   \
+  }                                                                                                                      \
+  template <typename T> inline bool operator OPERATOR(nullptr_t, const borrow<T>& rhs) noexcept {                        \
+    return nullptr OPERATOR rhs.get();                                                                                   \
+  }
+
+  CPL_COMPARE_BORROW(> )
+  CPL_COMPARE_BORROW(< )
+  CPL_COMPARE_BORROW(>= )
+  CPL_COMPARE_BORROW(== )
+  CPL_COMPARE_BORROW(!= )
+  CPL_COMPARE_BORROW(<= )
 
   // Forward declare for the `ref` method.
   template <typename T> class ref;

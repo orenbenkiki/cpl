@@ -198,6 +198,24 @@ namespace test {
   VERIFY_INVALID_REF(PTR);      \
   REQUIRE(!PTR)
 
+/// verify that an indirection does not compare equal to null.
+#define VERIFY_NOT_NULL(IND)       \
+  REQUIRE(IND != nullptr);         \
+  REQUIRE_FALSE(IND == nullptr);   \
+  if (!(IND > nullptr)) {          \
+    REQUIRE_FALSE(IND >= nullptr); \
+  }                                \
+  if (!(IND < nullptr)) {          \
+    REQUIRE_FALSE(IND <= nullptr); \
+  }
+
+/// verify that an indirection does compare equal to null.
+#define VERIFY_NULL(IND)         \
+  REQUIRE_FALSE(IND != nullptr); \
+  REQUIRE(IND == nullptr);       \
+  REQUIRE(IND >= nullptr);       \
+  REQUIRE(IND <= nullptr);
+
 #ifdef DOXYGEN // {
 
 /// Verify that the data referred to has been deleted.
@@ -317,6 +335,7 @@ namespace test {
   GIVEN("a null pointer") {                                       \
     cpl::PTR<Foo> null_foo_ptr;                                   \
     REQUIRE(Foo::live_objects.size() == 0);                       \
+    VERIFY_NULL(null_foo_ptr);                                    \
     VERIFY_INVALID_PTR(null_foo_ptr);                             \
     THEN("using to construct a reference will be " CPL_VARIANT) { \
       REQUIRE_CPL_THROWS(cpl::REF<Foo>{ PASS(null_foo_ptr) });    \
@@ -620,6 +639,7 @@ namespace test {
       int bar = __LINE__;
       cpl::sref<Bar> bar_ref = cpl::make_sref<Bar>(foo, bar);
       REQUIRE(Foo::live_objects.size() == 1);
+      VERIFY_NOT_NULL(bar_ref);
       VERIFY_VALID_COPIED_REF_CONSTRUCTION(sref);
       VERIFY_VALID_MOVED_REF_CONSTRUCTION(sref);
     }
@@ -661,6 +681,7 @@ namespace test {
       int bar = __LINE__;
       cpl::sptr<Bar> bar_ptr{ cpl::make_sptr<Bar>(foo, bar) };
       REQUIRE(Foo::live_objects.size() == 1);
+      VERIFY_NOT_NULL(bar_ptr);
       VERIFY_VALID_COPIED_PTR_CONSTRUCTION(sptr);
       VERIFY_VALID_MOVED_PTR_CONSTRUCTION(sptr);
     }
@@ -719,6 +740,7 @@ namespace test {
       int bar = __LINE__;
       cpl::uref<Bar> bar_ref = cpl::make_uref<Bar>(foo, bar);
       REQUIRE(Foo::live_objects.size() == 1);
+      VERIFY_NOT_NULL(bar_ref);
       VERIFY_VALID_MOVED_REF_CONSTRUCTION(uref);
     }
     VERIFY_NULL_REF_CONSTRUCTION(uref, uptr, MOVE);
@@ -752,6 +774,7 @@ namespace test {
       int bar = __LINE__;
       cpl::uref<Bar> bar_ref = cpl::make_uref<Bar>(foo, bar);
       REQUIRE(Foo::live_objects.size() == 1);
+      VERIFY_NOT_NULL(bar_ref);
       VERIFY_REF_CASTS(uref, MOVE);
     }
     REQUIRE(Foo::live_objects.size() == 0);
@@ -868,6 +891,14 @@ namespace test {
       Bar raw_bar{ foo, bar };
       cpl::ref<Bar> bar_ref{ cpl::unsafe_ref<Bar>(raw_bar) };
       REQUIRE(Foo::live_objects.size() == 1);
+      REQUIRE(bar_ref == &raw_bar);
+      REQUIRE_FALSE(bar_ref != &raw_bar);
+      REQUIRE(&raw_bar == bar_ref);
+      REQUIRE_FALSE(&raw_bar != bar_ref);
+      REQUIRE(bar_ref >= &raw_bar);
+      REQUIRE_FALSE(bar_ref > &raw_bar);
+      REQUIRE(bar_ref <= &raw_bar);
+      REQUIRE_FALSE(bar_ref < &raw_bar);
       VERIFY_VALID_COPIED_REF_CONSTRUCTION(ref);
       VERIFY_VALID_UNMOVED_REF_CONSTRUCTION(ref);
     }
@@ -915,6 +946,14 @@ namespace test {
       Bar raw_bar{ foo, bar };
       cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr(raw_bar) };
       REQUIRE(Foo::live_objects.size() == 1);
+      REQUIRE(bar_ptr == &raw_bar);
+      REQUIRE_FALSE(bar_ptr != &raw_bar);
+      REQUIRE(&raw_bar == bar_ptr);
+      REQUIRE_FALSE(&raw_bar != bar_ptr);
+      REQUIRE(bar_ptr >= &raw_bar);
+      REQUIRE_FALSE(bar_ptr > &raw_bar);
+      REQUIRE(bar_ptr <= &raw_bar);
+      REQUIRE_FALSE(bar_ptr < &raw_bar);
       VERIFY_VALID_COPIED_PTR_CONSTRUCTION(ptr);
       VERIFY_VALID_UNMOVED_PTR_CONSTRUCTION(ptr);
     }
@@ -969,6 +1008,14 @@ namespace test {
       THEN("we can ask it for a reference") {
         cpl::ref<Bar> bar_ref = bar_ptr.ref();
         REQUIRE(Foo::live_objects.size() == 1);
+        REQUIRE(bar_ptr == bar_ref);
+        REQUIRE_FALSE(bar_ptr != bar_ref);
+        REQUIRE(bar_ref == bar_ptr);
+        REQUIRE_FALSE(bar_ref != bar_ptr);
+        REQUIRE(bar_ptr >= bar_ref);
+        REQUIRE_FALSE(bar_ptr > bar_ref);
+        REQUIRE(bar_ptr <= bar_ref);
+        REQUIRE_FALSE(bar_ptr < bar_ref);
         VERIFY_VALID_PTR(bar_ptr);
         VERIFY_VALID_REF(bar_ref);
       }
