@@ -56,7 +56,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.1.2"
+#define CPL_VERSION "0.1.3"
 
 #ifdef DOXYGEN // {
 
@@ -202,7 +202,8 @@ SOFTWARE.
 ///
 /// All the pointer-like types provide the usual `operator*`, `operator->` and
 /// `operator bool` operators, and sometimes also well as `get`, `value`, and
-/// `value_or` (if these are provided by the relevant standard type).
+/// `value_or` (if these are provided by the relevant standard type, and also
+/// a `reset()` for @ref cpl::opt because it just makes sense).
 ///
 /// In addition, `cpl::ptr` provide `ref` and `ref_or` methods. These are more
 /// efficient than `value` and `value_or` since they just return a reference;
@@ -364,25 +365,53 @@ namespace cpl {
     template <typename... Args>
     inline opt(Args&&... args)
       : std::experimental::optional<T>(std::forward<Args>(args)...),
-        m_shared_ptr(*this ? &this->value() : (T*)nullptr, no_delete<T>()) {
+        m_shared_ptr(!*this ? (T*)nullptr : std::experimental::optional<T>::operator->(), no_delete<T>()) {
     }
 
     /// Reuse the optional value assignment.
     template <typename... Args> inline opt& operator=(Args&&... args) {
+      bool was_invalid = !*this;
       std::experimental::optional<T>::operator=(std::forward<Args>(args)...);
-      if (*this) {
-        m_shared_ptr.reset(&*this, no_delete<T>());
-      } else {
-        m_shared_ptr.reset();
+      if (!*this != was_invalid) {
+        if (!*this) {
+          m_shared_ptr.reset();
+        } else {
+          m_shared_ptr.reset(std::experimental::optional<T>::operator->(), no_delete<T>());
+        }
       }
       return *this;
     }
-#else // } CPL_SAFE {
+#else  // } CPL_SAFE {
     using std::experimental::optional<T>::optional;
 
+  public:
 #endif // } CPL_SAFE
 
-  public:
+#ifdef CPL_SAFE // {
+    /// Access the value.
+    inline T& operator*() {
+      CPL_ASSERT(!!*this, "accessing an empty optional value");
+      return std::experimental::optional<T>::operator*();
+    }
+    /// Access the value.
+    inline const T& operator*() const {
+      CPL_ASSERT(!!*this, "accessing an empty optional value");
+      return std::experimental::optional<T>::operator*();
+    }
+
+    /// Access a data member.
+    inline T* operator->() {
+      CPL_ASSERT(!!*this, "accessing an empty optional value");
+      return std::experimental::optional<T>::operator->();
+    }
+
+    /// Access a data member.
+    inline const T* operator->() const {
+      CPL_ASSERT(!!*this, "accessing an empty optional value");
+      return std::experimental::optional<T>::operator->();
+    }
+#endif // } CPL_SAFE
+
     /// Make the optional value empty.
     void reset() {
       std::experimental::optional<T>::operator=(std::experimental::nullopt);
@@ -390,6 +419,33 @@ namespace cpl {
       m_shared_ptr.reset();
 #endif // } CPL_SAFE
     };
+
+#ifdef CPL_SAFE // {
+    /// Track swap of the value.
+    inline void swap(opt<T>& other) {
+      std::experimental::optional<T>::swap(other);
+      if (!*this || !other) {
+        if (!*this) {
+          m_shared_ptr.reset();
+        } else {
+          m_shared_ptr.reset(std::experimental::optional<T>::operator->(), no_delete<T>());
+        }
+        if (!other) {
+          other.m_shared_ptr.reset();
+        } else {
+          other.m_shared_ptr.reset(other.std::experimental::optional<T>::operator->(), no_delete<T>());
+        }
+      }
+    }
+
+    /// Construct a value in-place.
+    template <typename... Args> inline void emplace(Args&&... args) {
+      if (!*this) {
+        m_shared_ptr.reset(std::experimental::optional<T>::operator->(), no_delete<T>());
+      }
+      std::experimental::optional<T>::emplace(std::forward<Args>(args)...);
+    }
+#endif // } CPL_SAFE
   };
 
   /// An additional parameter for unsafe raw pointer operations.
