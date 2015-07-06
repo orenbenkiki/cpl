@@ -57,7 +57,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.1.5"
+#define CPL_VERSION "0.2.1"
 
 #ifdef DOXYGEN // {
 
@@ -266,7 +266,7 @@ SOFTWARE.
 /// data. This is only safe when the data is `static`; CPL will not be able to
 /// detect invalid pointers to such data if it goes out of scope or is
 /// otherwise deleted. Alas, it is not possible to express the "this data is
-/// `static`" constraint in C++, so it is impossible for CPL to distinguish the
+/// static" constraint in C++, so it is impossible for CPL to distinguish the
 /// safe and unsafe cases.
 ///
 /// ## Collections
