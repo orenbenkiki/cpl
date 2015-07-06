@@ -2,8 +2,8 @@
 /// Test the clever protection library (CPL).
 
 #define CATCH_CONFIG_MAIN
-#include "catch.hpp"
 #include "cpl.hpp"
+#include "catch.hpp"
 
 #ifdef DOXYGEN // {
 /// Require that the expression will be checked in the safe variant but not in
@@ -361,62 +361,73 @@ namespace test {
   }
 
 /// Verify that a pointer type construction behaves as expected.
-#define VERIFY_VALID_PTR_CONSTRUCTION(PTR, PASS, VERIFY_PASSED) \
-  THEN("to construct another pointer") {                        \
-    cpl::PTR<Bar> bar_ptr_copy{ PASS(bar_ptr) };                \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(bar_ptr_copy);                             \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("to assign to another pointer") {                        \
-    cpl::PTR<Bar> bar_ptr_copy;                                 \
-    bar_ptr_copy = PASS(bar_ptr);                               \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(bar_ptr_copy);                             \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("to construct to a pointer to const") {                  \
-    cpl::PTR<const Bar> const_bar_ptr_copy{ PASS(bar_ptr) };    \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(const_bar_ptr_copy);                       \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("to assign to a pointer to const") {                     \
-    cpl::PTR<const Bar> const_bar_ptr_copy;                     \
-    const_bar_ptr_copy = PASS(bar_ptr);                         \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(const_bar_ptr_copy);                       \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("to construct a pointer to a base class") {              \
-    cpl::PTR<Foo> foo_ptr{ PASS(bar_ptr) };                     \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(foo_ptr);                                  \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("to assign to a pointer to a base class") {              \
-    cpl::PTR<Foo> foo_ptr;                                      \
-    foo_ptr = PASS(bar_ptr);                                    \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(foo_ptr);                                  \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("to construct a pointer to a const base class") {        \
-    cpl::PTR<const Foo> const_foo_ptr{ PASS(bar_ptr) };         \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(const_foo_ptr);                            \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("to assign to a pointer to a const base class") {        \
-    cpl::PTR<const Foo> const_foo_ptr;                          \
-    const_foo_ptr = PASS(bar_ptr);                              \
-    VERIFY_PASSED(bar_ptr);                                     \
-    VERIFY_VALID_PTR(const_foo_ptr);                            \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("we can clear assign a nullptr to it") {                 \
-    bar_ptr = nullptr;                                          \
-    VERIFY_INVALID_PTR(bar_ptr);                                \
+#define VERIFY_VALID_PTR_CONSTRUCTION(PTR, PASS, VERIFY_PASSED)                 \
+  THEN("to construct another pointer") {                                        \
+    cpl::PTR<Bar> bar_ptr_copy{ PASS(bar_ptr) };                                \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(bar_ptr_copy);                                             \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("to assign to another pointer") {                                        \
+    cpl::PTR<Bar> bar_ptr_copy;                                                 \
+    bar_ptr_copy = PASS(bar_ptr);                                               \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(bar_ptr_copy);                                             \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("to construct to a pointer to const") {                                  \
+    cpl::PTR<const Bar> const_bar_ptr_copy{ PASS(bar_ptr) };                    \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(const_bar_ptr_copy);                                       \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("to assign to a pointer to const") {                                     \
+    cpl::PTR<const Bar> const_bar_ptr_copy;                                     \
+    const_bar_ptr_copy = PASS(bar_ptr);                                         \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(const_bar_ptr_copy);                                       \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("to construct a pointer to a base class") {                              \
+    cpl::PTR<Foo> foo_ptr{ PASS(bar_ptr) };                                     \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(foo_ptr);                                                  \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("to assign to a pointer to a base class") {                              \
+    cpl::PTR<Foo> foo_ptr;                                                      \
+    foo_ptr = PASS(bar_ptr);                                                    \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(foo_ptr);                                                  \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("to construct a pointer to a const base class") {                        \
+    cpl::PTR<const Foo> const_foo_ptr{ PASS(bar_ptr) };                         \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(const_foo_ptr);                                            \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("to assign to a pointer to a const base class") {                        \
+    cpl::PTR<const Foo> const_foo_ptr;                                          \
+    const_foo_ptr = PASS(bar_ptr);                                              \
+    VERIFY_PASSED(bar_ptr);                                                     \
+    VERIFY_VALID_PTR(const_foo_ptr);                                            \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("we can assign a nullptr to it") {                                       \
+    bar_ptr = nullptr;                                                          \
+    VERIFY_INVALID_PTR(bar_ptr);                                                \
+  }                                                                             \
+  THEN("asking it for a ref-or will return the original data") {                \
+    int foo_alternate = __LINE__;                                               \
+    int bar_alternate = __LINE__;                                               \
+    Bar raw_bar_alternate{ foo, bar };                                          \
+    cpl::ref<Bar> bar_ref_alternate{ cpl::unsafe_ref<Bar>(raw_bar_alternate) }; \
+    REQUIRE(Foo::live_objects.size() == 2);                                     \
+    cpl::ref<Bar> bar_ref = bar_ptr.ref_or(bar_ref_alternate);                  \
+    REQUIRE(Foo::live_objects.size() == 2);                                     \
+    VERIFY_VALID_PTR(bar_ptr);                                                  \
+    VERIFY_VALID_REF(bar_ref);                                                  \
   }
 
 /// Verify a pointer provides null construction.
@@ -482,6 +493,10 @@ namespace test {
       cpl::REF<Bar> cast_bar_ref = cpl::cast_const<Bar>(PASS(const_bar_ref));     \
       REQUIRE(Foo::live_objects.size() == 1);                                     \
     }                                                                             \
+  }                                                                               \
+  THEN("we can cast it to a reference") {                                         \
+    Bar& ref = bar_ref;                                                           \
+    const Bar& const_ref = bar_ref;                                               \
   }
 
 /// Ensure casting a pointer works as expected.
@@ -551,22 +566,39 @@ namespace test {
   }
 
 /// Ensure converting a pointer to a reference works as expected.
-#define VERIFY_CONVERTING_PTR_TO_REF(REF, PTR, PASS)            \
-  THEN("we can copy it to a reference") {                       \
-    cpl::REF<Bar> bar_ref{ PASS(bar_ptr) };                     \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("we can copy it to a reference to const") {              \
-    cpl::REF<const Bar> const_bar_ref{ PASS(bar_ptr) };         \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("we can copy it to a reference to the base class") {     \
-    cpl::REF<Foo> foo_ref{ PASS(bar_ptr) };                     \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
-  }                                                             \
-  THEN("we can copy it to a reference to a const base class") { \
-    cpl::ref<const Foo> const_foo_ref{ PASS(bar_ptr) };         \
-    REQUIRE(Foo::live_objects.size() == 1);                     \
+#define VERIFY_CONVERTING_PTR_TO_REF(REF, PTR, PASS)                            \
+  THEN("we can copy it to a reference") {                                       \
+    cpl::REF<Bar> bar_ref{ PASS(bar_ptr) };                                     \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("we can copy it to a reference to const") {                              \
+    cpl::REF<const Bar> const_bar_ref{ PASS(bar_ptr) };                         \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("we can copy it to a reference to the base class") {                     \
+    cpl::REF<Foo> foo_ref{ PASS(bar_ptr) };                                     \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("we can copy it to a reference to a const base class") {                 \
+    cpl::ref<const Foo> const_foo_ref{ PASS(bar_ptr) };                         \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+  }                                                                             \
+  THEN("we can ask it for a reference") {                                       \
+    cpl::ref<Bar> bar_ref = bar_ptr.ref();                                      \
+    REQUIRE(Foo::live_objects.size() == 1);                                     \
+    VERIFY_VALID_PTR(bar_ptr);                                                  \
+    VERIFY_VALID_REF(bar_ref);                                                  \
+  }                                                                             \
+  THEN("asking it for a ref-or will return the original data") {                \
+    int foo_alternate = __LINE__;                                               \
+    int bar_alternate = __LINE__;                                               \
+    Bar raw_bar_alternate{ foo, bar };                                          \
+    cpl::ref<Bar> bar_ref_alternate{ cpl::unsafe_ref<Bar>(raw_bar_alternate) }; \
+    REQUIRE(Foo::live_objects.size() == 2);                                     \
+    cpl::ref<Bar> bar_ref = bar_ptr.ref_or(bar_ref_alternate);                  \
+    REQUIRE(Foo::live_objects.size() == 2);                                     \
+    VERIFY_VALID_PTR(bar_ptr);                                                  \
+    VERIFY_VALID_REF(bar_ref);                                                  \
   }
 
   TEST_CASE("swapping an optional value") {
@@ -684,6 +716,12 @@ namespace test {
       VERIFY_NOT_NULL(bar_ptr);
       VERIFY_VALID_COPIED_PTR_CONSTRUCTION(sptr);
       VERIFY_VALID_MOVED_PTR_CONSTRUCTION(sptr);
+      THEN("we can ask it for a shared reference") {
+        cpl::sref<Bar> bar_ref = bar_ptr.sref();
+        REQUIRE(Foo::live_objects.size() == 1);
+        VERIFY_VALID_PTR(bar_ptr);
+        VERIFY_VALID_REF(bar_ref);
+      }
     }
     REQUIRE(Foo::live_objects.size() == 0);
   }
@@ -788,6 +826,12 @@ namespace test {
       cpl::uptr<Bar> bar_ptr{ cpl::make_uptr<Bar>(foo, bar) };
       REQUIRE(Foo::live_objects.size() == 1);
       VERIFY_VALID_MOVED_PTR_CONSTRUCTION(uptr);
+      THEN("we can ask it for a unique reference") {
+        cpl::uref<Bar> bar_ref = bar_ptr.uref();
+        REQUIRE(Foo::live_objects.size() == 1);
+        VERIFY_INVALID_PTR(bar_ptr);
+        VERIFY_VALID_REF(bar_ref);
+      }
     }
     VERIFY_NULL_PTR_CONSTRUCTION(uptr);
     REQUIRE(Foo::live_objects.size() == 0);
@@ -1005,7 +1049,7 @@ namespace test {
       cpl::ptr<Bar> bar_ptr{ cpl::unsafe_ptr<Bar>(raw_bar) };
       REQUIRE(Foo::live_objects.size() == 1);
       VERIFY_CONVERTING_PTR_TO_REF(ref, ptr, COPY);
-      THEN("we can ask it for a reference") {
+      THEN("we can compare it to a reference") {
         cpl::ref<Bar> bar_ref = bar_ptr.ref();
         REQUIRE(Foo::live_objects.size() == 1);
         REQUIRE(bar_ptr == bar_ref);
@@ -1016,17 +1060,6 @@ namespace test {
         REQUIRE_FALSE(bar_ptr > bar_ref);
         REQUIRE(bar_ptr <= bar_ref);
         REQUIRE_FALSE(bar_ptr < bar_ref);
-        VERIFY_VALID_PTR(bar_ptr);
-        VERIFY_VALID_REF(bar_ref);
-      }
-      THEN("asking it for a ref-or will return the original data") {
-        int foo_alternate = __LINE__;
-        int bar_alternate = __LINE__;
-        Bar raw_bar_alternate{ foo, bar };
-        cpl::ref<Bar> bar_ref_alternate{ cpl::unsafe_ref<Bar>(raw_bar_alternate) };
-        REQUIRE(Foo::live_objects.size() == 2);
-        cpl::ref<Bar> bar_ref = bar_ptr.ref_or(bar_ref_alternate);
-        REQUIRE(Foo::live_objects.size() == 2);
         VERIFY_VALID_PTR(bar_ptr);
         VERIFY_VALID_REF(bar_ref);
       }
@@ -1094,58 +1127,110 @@ namespace test {
   })
 
 /// Verify we cab borrow something.
-#define VERIFY_BORROWING(ACCESS_VALUE, ASSIGN_TO_REF, RESET)         \
-  THEN("we can copy it to a borrowed pointer") {                     \
-    cpl::ptr<Bar> bar_ptr{ *bar_something };                         \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_PTR();                                   \
-    VERIFY_RESET_BORROWED_PTR(RESET);                                \
-  }                                                                  \
-  THEN("we can assign it to a borrowed pointer") {                   \
-    cpl::ptr<Bar> bar_ptr;                                           \
-    bar_ptr = *bar_something;                                        \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_PTR();                                   \
-    VERIFY_RESET_BORROWED_PTR(RESET);                                \
-  }                                                                  \
-  THEN("we can copy it to a borrowed pointer to a base class") {     \
-    cpl::ptr<Foo> bar_ptr{ *bar_something };                         \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_PTR();                                   \
-    VERIFY_RESET_BORROWED_PTR(RESET);                                \
-  }                                                                  \
-  THEN("we can assign it to a borrowed pointer to a base class") {   \
-    cpl::ptr<Foo> bar_ptr;                                           \
-    bar_ptr = *bar_something;                                        \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_PTR();                                   \
-    VERIFY_RESET_BORROWED_PTR(RESET);                                \
-  }                                                                  \
-  THEN("we can copy it to a borrowed reference") {                   \
-    cpl::ref<Bar> bar_ref{ *bar_something };                         \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_REF();                                   \
-    VERIFY_RESET_BORROWED_REF(RESET);                                \
-  }                                                                  \
-  THEN("we can assign it to a borrowed reference") {                 \
-    cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(ACCESS_VALUE);      \
-    bar_ref = ASSIGN_TO_REF(Bar, *bar_something);                    \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_REF();                                   \
-    VERIFY_RESET_BORROWED_REF(RESET);                                \
-  }                                                                  \
-  THEN("we can copy it to a borrowed reference to a base class") {   \
-    cpl::ref<Foo> bar_ref{ *bar_something };                         \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_REF();                                   \
-    VERIFY_RESET_BORROWED_REF(RESET);                                \
-  }                                                                  \
-  THEN("we can assign it to a borrowed reference to a base class") { \
-    cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(ACCESS_VALUE);      \
-    bar_ref = ASSIGN_TO_REF(Foo, *bar_something);                    \
-    REQUIRE(Foo::live_objects.size() == 1);                          \
-    VERIFY_EXPIRED_BORROWED_REF();                                   \
-    VERIFY_RESET_BORROWED_REF(RESET);                                \
+#define VERIFY_BORROWING(ACCESS_VALUE, ASSIGN_TO_REF, RESET)                  \
+  THEN("we can copy it to a borrowed pointer") {                              \
+    cpl::ptr<Bar> bar_ptr{ *bar_something };                                  \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed pointer") {                            \
+    cpl::ptr<Bar> bar_ptr;                                                    \
+    bar_ptr = *bar_something;                                                 \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can copy it to a borrowed pointer to const") {                     \
+    cpl::ptr<const Bar> bar_ptr{ *bar_something };                            \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed pointer to const") {                   \
+    cpl::ptr<const Bar> bar_ptr;                                              \
+    bar_ptr = *bar_something;                                                 \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can copy it to a borrowed pointer to a base class") {              \
+    cpl::ptr<Foo> bar_ptr{ *bar_something };                                  \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed pointer to a base class") {            \
+    cpl::ptr<Foo> bar_ptr;                                                    \
+    bar_ptr = *bar_something;                                                 \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can copy it to a borrowed pointer to a base class to const") {     \
+    cpl::ptr<const Foo> bar_ptr{ *bar_something };                            \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed pointer to a base class to const") {   \
+    cpl::ptr<const Foo> bar_ptr;                                              \
+    bar_ptr = *bar_something;                                                 \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_PTR();                                            \
+    VERIFY_RESET_BORROWED_PTR(RESET);                                         \
+  }                                                                           \
+  THEN("we can copy it to a borrowed reference") {                            \
+    cpl::ref<Bar> bar_ref{ *bar_something };                                  \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed reference") {                          \
+    cpl::ref<Bar> bar_ref = cpl::unsafe_ref<Bar>(ACCESS_VALUE);               \
+    bar_ref = ASSIGN_TO_REF(Bar, *bar_something);                             \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
+  }                                                                           \
+  THEN("we can copy it to a borrowed reference to const") {                   \
+    cpl::ref<const Bar> bar_ref{ *bar_something };                            \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed reference to const") {                 \
+    cpl::ref<const Bar> bar_ref = cpl::unsafe_ref<Bar>(ACCESS_VALUE);         \
+    bar_ref = ASSIGN_TO_REF(Bar, *bar_something);                             \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
+  }                                                                           \
+  THEN("we can copy it to a borrowed reference to a base class") {            \
+    cpl::ref<Foo> bar_ref{ *bar_something };                                  \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed reference to a base class") {          \
+    cpl::ref<Foo> bar_ref = cpl::unsafe_ref<Foo>(ACCESS_VALUE);               \
+    bar_ref = ASSIGN_TO_REF(Foo, *bar_something);                             \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
+  }                                                                           \
+  THEN("we can copy it to a borrowed reference to a base class to const") {   \
+    cpl::ref<const Foo> bar_ref{ *bar_something };                            \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
+  }                                                                           \
+  THEN("we can assign it to a borrowed reference to a base class to const") { \
+    cpl::ref<const Foo> bar_ref = cpl::unsafe_ref<Foo>(ACCESS_VALUE);         \
+    bar_ref = ASSIGN_TO_REF(Foo, *bar_something);                             \
+    REQUIRE(Foo::live_objects.size() == 1);                                   \
+    VERIFY_EXPIRED_BORROWED_REF();                                            \
+    VERIFY_RESET_BORROWED_REF(RESET);                                         \
   }
 
   TEST_CASE("borrowing a held value") {
@@ -1157,17 +1242,52 @@ namespace test {
       REQUIRE(Foo::live_objects.size() == 1);
       VERIFY_BORROWING(*bar_something, IMPLICIT_ASSIGN_TO_REF, WITHOUT_RESET);
     }
+    GIVEN("a const held value") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      const cpl::is<Bar> const_is_bar{ foo, bar };
+      REQUIRE(Foo::live_objects.size() == 1);
+      THEN("we can assign it to a reference to a const") {
+        int foo_second = __LINE__;
+        int bar_second = __LINE__;
+        auto bar_is_second = cpl::is<Bar>{ foo_second, bar_second };
+        cpl::ref<const Bar> ref_const_bar = bar_is_second;
+        ref_const_bar = const_is_bar;
+        VERIFY_VALID_REF(ref_const_bar);
+      }
+      THEN("we can assign it to a pointer to a const") {
+        cpl::ptr<const Bar> ptr_const_bar;
+        ptr_const_bar = const_is_bar;
+        VERIFY_VALID_PTR(ptr_const_bar);
+      }
+    }
     REQUIRE(Foo::live_objects.size() == 0);
   }
 
   TEST_CASE("borrowing an optional value") {
     REQUIRE(Foo::live_objects.size() == 0);
-    GIVEN("we have an optional reference") {
+    GIVEN("we have an optional value") {
       int foo = __LINE__;
       int bar = __LINE__;
       auto bar_something = std::make_unique<cpl::opt<Bar>>(cpl::in_place, foo, bar);
       REQUIRE(Foo::live_objects.size() == 1);
       VERIFY_BORROWING(bar_something->value(), EXPLICIT_ASSIGN_TO_REF, WITH_RESET);
+    }
+    GIVEN("a const optional value") {
+      int foo = __LINE__;
+      int bar = __LINE__;
+      const cpl::opt<Bar> const_opt_bar{ cpl::in_place, foo, bar };
+      REQUIRE(Foo::live_objects.size() == 1);
+      THEN("we can copy it to a reference to a const") {
+        cpl::ref<const Bar> ref_const_bar{ const_opt_bar };
+        ref_const_bar = const_opt_bar;
+        VERIFY_VALID_REF(ref_const_bar);
+      }
+      THEN("we can assign it to a pointer to a const") {
+        cpl::ptr<const Bar> ref_const_bar;
+        ref_const_bar = const_opt_bar;
+        VERIFY_VALID_PTR(ref_const_bar);
+      }
     }
     REQUIRE(Foo::live_objects.size() == 0);
   }

@@ -30,6 +30,7 @@ SOFTWARE.
 #pragma once
 
 #include <experimental/optional>
+#include <memory>
 
 #ifndef CPL_WITHOUT_COLLECTIONS // {
 
@@ -56,7 +57,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.1.4"
+#define CPL_VERSION "0.1.5"
 
 #ifdef DOXYGEN // {
 
@@ -293,6 +294,10 @@ SOFTWARE.
 ///
 /// As always, YMMV, no warranty is implied, may contain nuts, etc.
 namespace cpl {
+  template <typename T> class sref;
+  template <typename T> class uref;
+  template <typename T> class ref;
+
   /// A `Deleter` that doesn't delete the object.
   ///
   /// We use this for the `std::shared_ptr` we attach to local data to ensure
@@ -336,18 +341,31 @@ namespace cpl {
     {
     }
 
-    // Use the `T` assignment operator as is, that is, do not change the
-    // `m_shared_ptr`.
-    using T::operator=;
+    /// Ensure we don't copy the shared pointer value.
+    inline is(const is<T>& other)
+      : T(other)
+#ifdef CPL_SAFE // {
+        ,
+        m_shared_ptr((T*)this, no_delete<T>())
+#endif // } CPL_SAFE
+    {
+    }
 
-#ifdef DOXYGEN
-    /// Doxygen 1.8.5 gets confused and thinks @ref T::operator is a type.
-    struct T {
-      /// Doxygen 1.8.5 gets confused and thinks this is a type.
-      typedef void operator;
-    };
-#endif
+    /// Ensure we don't copy the shared pointer value.
+    inline const is& operator=(const is<T>& other) {
+      T::operator=(other);
+      return *this;
+    }
+
+    /// Allow assigning a raw value.
+    inline const is& operator=(const T& other) {
+      T::operator=(other);
+      return *this;
+    }
   };
+
+  /// Allow convenient access to `std::experimental::in_place_t`.
+  typedef std::experimental::in_place_t in_place_t;
 
   /// Allow convenient access to `std::experimental::in_place`.
   constexpr std::experimental::in_place_t in_place{};
@@ -393,6 +411,7 @@ namespace cpl {
       CPL_ASSERT(!!*this, "accessing an empty optional value");
       return std::experimental::optional<T>::operator*();
     }
+
     /// Access the value.
     inline const T& operator*() const {
       CPL_ASSERT(!!*this, "accessing an empty optional value");
@@ -548,6 +567,10 @@ namespace cpl {
     template <typename U> friend class shared;
 
   public:
+    /// Construction from a standard shared pointer.
+    inline shared(const std::shared_ptr<T>& other) : std::shared_ptr<T>(other) {
+    }
+
     /// Unsafe construction from a raw pointer.
     inline shared(T* raw_ptr, unsafe_raw_t) : std::shared_ptr<T>(raw_ptr) {
     }
@@ -589,6 +612,7 @@ namespace cpl {
 
   /// A pointer that uses reference counting.
   template <typename T> class sptr : public shared<T> {
+    template <typename U> friend class wptr;
     using shared<T>::shared;
 
   public:
@@ -597,20 +621,35 @@ namespace cpl {
     }
 
     /// Explicit null constructor.
-    inline sptr(nullptr_t) : sptr() {
+    inline sptr(std::nullptr_t) : sptr() {
     }
 
-    /// Take ownership from another shared indirection.
+    /// Share with another shared indirection.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline sptr(shared<U>&& other)
       : shared<T>(std::move(other)) {
     }
 
-    /// Take ownership from another shared indirection.
+    /// Share with another shared indirection.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline sptr<T>& operator=(shared<U>&& other) {
       shared<T>::operator=(std::move(other));
       return *this;
+    }
+
+    /// Provide a reference to the value (which must exist).
+    inline ::cpl::ref<T> ref() const {
+      return ::cpl::ref<T>(*this);
+    }
+
+    /// Access the current value or, if empty, a default value.
+    inline ::cpl::ref<T> ref_or(const ::cpl::ref<T>& if_empty) const {
+      return *this ? ref() : if_empty;
+    }
+
+    /// Convert the pointer to a reference.
+    inline cpl::sref<T> sref() const {
+      return cpl::sref<T>(std::move(*this));
     }
   };
 
@@ -641,17 +680,23 @@ namespace cpl {
       CPL_ASSERT(shared<T>::get(), "constructing a null reference");
     }
 
-    /// Take ownership from another shared reference.
+    /// Share with another shared pointer.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline sref(sref<U>&& other)
+    explicit inline sref(sptr<U>&& other)
       : shared<T>(std::move(other)) {
     }
 
-    /// Take ownership from another shared reference.
+    /// Share with another shared reference.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline sref<T>& operator=(sref<U>&& other) {
-      shared<T>::operator=(std::move(other));
+      sref<T>::operator=(std::move(other));
       return *this;
+    }
+
+    /// Share with another shared reference.
+    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
+    inline sref(sref<U>&& other)
+      : shared<T>(std::move(other)) {
     }
 
     /// Forbid clearing the reference.
@@ -674,10 +719,23 @@ namespace cpl {
       shared<T>::reset(raw_ptr, deleter, allocator);
       CPL_ASSERT(shared<T>::get(), "resetting a null reference");
     }
+
+    /// Access the value.
+    inline operator T&() const {
+      return *shared<T>::get();
+    }
   };
 
   /// A weak way to obtain a shared pointer.
-  template <typename T> using wptr = std::weak_ptr<T>;
+  template <typename T> struct wptr : public std::weak_ptr<T> {
+    using std::weak_ptr<T>::weak_ptr;
+
+  public:
+    /// Obtain a shared pointer, unless the data was already deleted.
+    sptr<T> lock() const {
+      return sptr<T>(std::weak_ptr<T>::lock());
+    }
+  };
 
   /// An indirection that deletes the data when it is deleted.
   template <typename T> class unique : public std::unique_ptr<T> {
@@ -787,7 +845,7 @@ namespace cpl {
     }
 
     /// Explicit null constructor.
-    inline uptr(nullptr_t) : uptr() {
+    inline uptr(std::nullptr_t) : uptr() {
     }
 
 #ifdef CPL_SAFE // {
@@ -801,6 +859,21 @@ namespace cpl {
       unique<T>::swap(other);
     }
 #endif // } CPL_SAFE
+
+    /// Provide a reference to the value (which must exist).
+    inline ::cpl::ref<T> ref() const {
+      return ::cpl::ref<T>(*this);
+    }
+
+    /// Access the current value or, if empty, a default value.
+    inline ::cpl::ref<T> ref_or(const ::cpl::ref<T>& if_empty) const {
+      return *this ? ref() : if_empty;
+    }
+
+    /// Convert the pointer to a reference (clearing it).
+    inline cpl::uref<T> uref() {
+      return cpl::uref<T>(std::move(*this));
+    }
   };
 
   /// A reference that deletes the data when it is deleted.
@@ -857,6 +930,11 @@ namespace cpl {
       unique<T>::swap(other);
       CPL_ASSERT(unique<T>::get(), "swapping a null reference");
     }
+
+    /// Access the value.
+    inline operator T&() const {
+      return *unique<T>::get();
+    }
   };
 
   /// An indirection for data whose lifetime is determined elsewhere.
@@ -878,6 +956,9 @@ namespace cpl {
 #endif // } CPL_SAFE
 
   public:
+    /// Provide convenient access to the type of the data.
+    typedef T element_type;
+
     /// Unsafe construction from a raw pointer.
     inline borrow(T* raw_ptr, unsafe_raw_t)
       :
@@ -948,6 +1029,12 @@ namespace cpl {
     {
     }
 
+    /// Construction from a held value.
+    template <typename U, typename = typename std::enable_if<std::is_const<T>::value && std::is_convertible<U*, T*>::value>::type>
+    inline borrow(const is<U>& other)
+      : borrow(*const_cast<is<U>*>(&other)) {
+    }
+
     /// Construction from an optional value.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     inline borrow(opt<U>& other)
@@ -960,6 +1047,12 @@ namespace cpl {
         m_weak_ptr(other.m_shared_ptr)
 #endif // } CPL_SAFE
     {
+    }
+
+    /// Construction from a held value.
+    template <typename U, typename = typename std::enable_if<std::is_const<T>::value && std::is_convertible<U*, T*>::value>::type>
+    inline borrow(const opt<U>& other)
+      : borrow(*const_cast<opt<U>*>(&other)) {
     }
 
     /// Construction from a shared indirection.
@@ -1040,10 +1133,10 @@ namespace cpl {
   template <typename T, typename U> inline bool operator OPERATOR(T* lhs, const borrow<U>& rhs) noexcept {               \
     return lhs OPERATOR rhs.get();                                                                                       \
   }                                                                                                                      \
-  template <typename T> inline bool operator OPERATOR(const borrow<T>& lhs, nullptr_t) noexcept {                        \
+  template <typename T> inline bool operator OPERATOR(const borrow<T>& lhs, std::nullptr_t) noexcept {                   \
     return lhs.get() OPERATOR nullptr;                                                                                   \
   }                                                                                                                      \
-  template <typename T> inline bool operator OPERATOR(nullptr_t, const borrow<T>& rhs) noexcept {                        \
+  template <typename T> inline bool operator OPERATOR(std::nullptr_t, const borrow<T>& rhs) noexcept {                   \
     return nullptr OPERATOR rhs.get();                                                                                   \
   }
 
@@ -1069,7 +1162,7 @@ namespace cpl {
     }
 
     /// Explicit null constructor.
-    inline ptr(nullptr_t) : ptr() {
+    inline ptr(std::nullptr_t) : ptr() {
     }
 
     /// Test whether the pointer is not null.
@@ -1078,22 +1171,12 @@ namespace cpl {
     }
 
     /// Provide a reference to the value (which must exist).
-    inline ::cpl::ref<T> ref() {
-      return ::cpl::ref<T>(*this);
-    }
-
-    /// Provide a reference to the value (which must exist).
-    inline ::cpl::ref<const T> ref() const {
+    inline ::cpl::ref<T> ref() const {
       return ::cpl::ref<T>(*this);
     }
 
     /// Access the current value or, if empty, a default value.
-    inline ::cpl::ref<T> ref_or(const ::cpl::ref<T>& if_empty) {
-      return *this ? ref() : if_empty;
-    }
-
-    /// Access the current value or, if empty, a default value.
-    inline ::cpl::ref<const T> ref_or(const ::cpl::ref<const T>& if_empty) const {
+    inline ::cpl::ref<T> ref_or(const ::cpl::ref<T>& if_empty) const {
       return *this ? ref() : if_empty;
     }
   };
@@ -1131,18 +1214,23 @@ namespace cpl {
       : borrow<T>(other) {
     }
 
+    /// Construct from a held value.
+    template <typename U, typename = typename std::enable_if<std::is_const<T>::value && std::is_convertible<U*, T*>::value>::type>
+    inline ref(const is<U>& other)
+      : borrow<T>(*const_cast<is<U>*>(&other)) {
+    }
+
     /// Construct from an optional value.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref(opt<U>& other)
+    explicit inline ref(opt<U>& other)
       : borrow<T>(other) {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
     }
 
-    /// Assign from an optional value.
-    template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-    inline ref& operator=(opt<U>& other) {
-      borrow<T>::operator=(other);
-      return *this;
+    /// Construct from an optional value.
+    template <typename U, typename = typename std::enable_if<std::is_const<T>::value && std::is_convertible<U*, T*>::value>::type>
+    inline ref(const opt<U>& other)
+      : borrow<T>(*const_cast<opt<U>*>(&other)) {
     }
 
     /// Copy a shared reference.
@@ -1152,7 +1240,7 @@ namespace cpl {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
     }
 
-    /// Copy a unique pointer.
+    /// Copy a shared pointer.
     template <typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
     explicit inline ref(const sptr<U>& other)
       : borrow<T>(other) {
@@ -1171,6 +1259,11 @@ namespace cpl {
     explicit inline ref(const uptr<U>& other)
       : borrow<T>(other) {
       CPL_ASSERT(borrow<T>::m_weak_ptr.lock().get(), "constructing a null reference");
+    }
+
+    /// Access the value.
+    inline operator T&() const {
+      return *borrow<T>::get();
     }
   };
 
