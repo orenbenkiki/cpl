@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classcpl_1_1borrow.html" title="An indirection for data whose lifetime is determined elsewhere." alt="" coords="5,31,133,57"/>
+<area shape="rect" id="node2" href="$classcpl_1_1ptr.html" title="A pointer for data whose lifetime is determined elsewhere." alt="" coords="182,5,285,32"/>
+<area shape="rect" id="node3" href="$classcpl_1_1ref.html" title="A reference for data whose lifetime is determined elsewhere." alt="" coords="182,56,285,83"/>
+</map>

@@ -1,0 +1,5 @@
+var searchData=
+[
+  ['verify_5finvalid_5fptr_5fconstruction',['VERIFY_INVALID_PTR_CONSTRUCTION',['../namespacetest.html#abc9965212bd37327cec19ab2f6495f2a',1,'test::VERIFY_INVALID_PTR_CONSTRUCTION(sptr, COPY)'],['../namespacetest.html#a1b2ba1c40efcb79e8575608e9e260008',1,'test::VERIFY_INVALID_PTR_CONSTRUCTION(uptr, MOVE)'],['../namespacetest.html#ac9eef7551a868588cfcadb79fa749730',1,'test::VERIFY_INVALID_PTR_CONSTRUCTION(ptr, COPY)']]],
+  ['verify_5finvalid_5fref_5fconstruction',['VERIFY_INVALID_REF_CONSTRUCTION',['../namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7',1,'test::VERIFY_INVALID_REF_CONSTRUCTION(sref, sptr, cpl::make_sref&lt; T &gt;(0), cpl::make_sref&lt; const T &gt;(0), COPY)'],['../namespacetest.html#a507c61403f2887e1b0063e7cc3e83ebd',1,'test::VERIFY_INVALID_REF_CONSTRUCTION(uref, uptr, cpl::make_uref&lt; T &gt;(0), cpl::make_uref&lt; const T &gt;(0), MOVE)'],['../namespacetest.html#ab415db1615995bec4cbb119b6fb3c3da',1,'test::VERIFY_INVALID_REF_CONSTRUCTION(ref, ptr, cpl::ref&lt; T &gt;(cpl::unsafe_ref&lt; T &gt;(*(T *) nullptr)), cpl::ref&lt; const T &gt;(cpl::unsafe_ref&lt; T &gt;(*(T *) nullptr)), COPY)']]]
+];

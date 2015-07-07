@@ -1,0 +1,4 @@
+<map id="cpl::borrow&lt; T &gt;" name="cpl::borrow&lt; T &gt;">
+<area shape="rect" id="node2" href="$classcpl_1_1ptr.html" title="A pointer for data whose lifetime is determined elsewhere." alt="" coords="5,80,107,107"/>
+<area shape="rect" id="node3" href="$classcpl_1_1ref.html" title="A reference for data whose lifetime is determined elsewhere." alt="" coords="131,80,233,107"/>
+</map>

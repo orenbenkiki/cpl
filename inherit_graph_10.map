@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title="STL class." alt="" coords="5,31,160,57"/>
+<area shape="rect" id="node2" href="$classcpl_1_1unique.html" title="An indirection that deletes the data when it is deleted." alt="" coords="208,31,336,57"/>
+<area shape="rect" id="node3" href="$classcpl_1_1uptr.html" title="A pointer that deletes the data when it is deleted." alt="" coords="385,5,495,32"/>
+<area shape="rect" id="node4" href="$classcpl_1_1uref.html" title="A reference that deletes the data when it is deleted." alt="" coords="385,56,495,83"/>
+</map>

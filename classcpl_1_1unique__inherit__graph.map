@@ -1,0 +1,5 @@
+<map id="cpl::unique&lt; T &gt;" name="cpl::unique&lt; T &gt;">
+<area shape="rect" id="node3" href="$classcpl_1_1uptr.html" title="A pointer that deletes the data when it is deleted." alt="" coords="5,155,115,181"/>
+<area shape="rect" id="node4" href="$classcpl_1_1uref.html" title="A reference that deletes the data when it is deleted." alt="" coords="139,155,249,181"/>
+<area shape="rect" id="node2" title="STL class." alt="" coords="49,5,203,32"/>
+</map>

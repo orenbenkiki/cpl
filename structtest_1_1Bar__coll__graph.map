@@ -1,0 +1,5 @@
+<map id="test::Bar" name="test::Bar">
+<area shape="rect" id="node2" href="$structtest_1_1Foo.html" title="A sample data type to refer to in the tests." alt="" coords="51,187,129,213"/>
+<area shape="rect" id="node3" href="$classcpl_1_1set.html" title="cpl::set\&lt; const Foo * \&gt;" alt="" coords="5,96,176,123"/>
+<area shape="rect" id="node4" href="$classcpl_1_1set.html" title="A set of values." alt="" coords="21,5,160,32"/>
+</map>
