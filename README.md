@@ -26,6 +26,11 @@ libraries and/or binaries to clarify which variant is used.
 
 ## Caveats
 
+Ideally the `cpl` types would be 100% compatible, drop-in replacements to the
+`std` types. In practice this is impossible due to the need to protect built-in
+standard types like `T*` and `T&`. Therefore migration to using CPL requires
+manually modifying the code.
+
 The fast variant is very unsafe. The safe variant is very slow. Achieving
 simultaneous safety and speed is extremely difficult, and probably impossible
 in C++. CPL is an engineering compromise. Look into
@@ -36,14 +41,19 @@ The fast variant is as fast as possible. The safe variant is as safe as
 possible. Obviously it is also possible to define intermediate points on this
 spectrum, but currently CPL only provides the two extremes.
 
-Defining correct, full-functionality C++ smart pointer types is an extremely
-difficult task. Currently CPL provides a naive implementation for some of its
-types.
+The implementation is naive in many ways. Writing an STL-level library in
+modern C++ is a daunting task: issues such as `constexpr`, `noexcept` and
+perfect forwarding are fiendishly difficult to get right. Even simple
+`const`-ness is tricky due to the existence of both `const opt<T>` and
+`opt<const T>`.
 
-Ideally the `cpl` types would be 100% compatible, drop-in replacements to the
-`std` types. In practice this is impossible due to the need to protect built-in
-standard types like `T*` and `T&`. Therefore migration to using CPL requires
-manually modifying the code.
+The unit tests are a great help in ensuring everything behaves as it should,
+however they aren't 100% complete so some edge cases might be wrong. It is also
+difficult to verify the library forbids all sort of invalid code (even though
+@ref MUST_NOT_COMPILE helps a bit). In general CPL is relaxed about this
+because the safe version will detect any foul play at run-time.
+
+As always, YMMV, no warranty is implied, may contain nuts, etc.
 
 ## Building and Installing
 

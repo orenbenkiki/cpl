@@ -57,7 +57,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.2.1"
+#define CPL_VERSION "0.2.2"
 
 #ifdef DOXYGEN // {
 
@@ -233,8 +233,9 @@ SOFTWARE.
 ///
 /// CPL provides @ref cpl::cast_static, @ref cpl::cast_dynamic, @ref
 /// cpl::cast_reinterpret and @ref cpl::cast_const which work on all the CPL
-/// types. The safe @ref cpl::cast_static verifies that it gives the same
-/// results as @ref cpl::cast_dynamic. This will only fail if there are virtual
+/// types. The fast @ref cpl::cast_clever is the same as `cpl::cast_static`.
+/// The safe `cpl::cast_clever` verifies that `cpl::cast_static` gives the same
+/// results as `cpl::cast_dynamic`. This will only fail if there are virtual
 /// base classes involved, in which case you should use the more costly
 /// `cpl::cast_dynamic`. Other than this, CPL lets you freely shoot yourself in
 /// the foot using the casts.
@@ -279,20 +280,6 @@ SOFTWARE.
 /// Using these types instead of the `std` types will provide additional checks
 /// in safe mode, detecting out-of-bounds and similar errors, while having zero
 /// impact on the fast mode.
-///
-/// ## Caveats
-///
-/// The implementation is naive in many ways. Writing an STL-level library in
-/// modern C++ is a daunting task: issues such as `constexpr`, `noexcept` and
-/// perfect forwarding are fiendishly difficult to get right. Even simple
-/// `const`-ness is tricky due to the existence of both `const ref<T>` and
-/// `ref<const T>`.
-///
-/// It is also difficult to verify the library forbids all sort of invalid code
-/// (even though @ref MUST_NOT_COMPILE helps a bit). In general CPL is relaxed
-/// about this because the safe version will detect any foul play at run-time.
-///
-/// As always, YMMV, no warranty is implied, may contain nuts, etc.
 namespace cpl {
   template <typename T> class sref;
   template <typename T> class uref;
@@ -1307,234 +1294,241 @@ namespace cpl {
     return ptr<T>{ &data, unsafe_raw_t(0) };
   }
 
-  /// A static cast between reference types.
+  /// A clever cast between reference types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
   /// which will always be true unless you use virtual base classes.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sref<T> cast_static(const sref<U>& from_ref) {
+  template <typename T, typename U> inline sref<T> cast_clever(const sref<U>& from_ref) {
 #ifdef CPL_SAFE // {
     U* from_raw = const_cast<U*>(from_ref.get());
     T* to_dynamic = dynamic_cast<T*>(from_raw);
     T* to_raw = static_cast<T*>(from_raw);
-    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+    CPL_ASSERT(to_dynamic == to_raw, "clever cast gave the wrong result");
 #endif // } CPL_SAFE
     return sref<T>{ from_ref, unsafe_static_t(0) };
   }
 
-  /// A static cast between pointer types.
+  /// A clever cast between pointer types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
   /// which will always be true unless you use virtual base classes.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sptr<T> cast_static(const sptr<U>& from_ptr) {
+  template <typename T, typename U> inline sptr<T> cast_clever(const sptr<U>& from_ptr) {
 #ifdef CPL_SAFE // {
     U* from_raw = from_ptr.get();
     T* to_dynamic = dynamic_cast<T*>(from_raw);
     T* to_raw = static_cast<T*>(from_raw);
-    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+    CPL_ASSERT(to_dynamic == to_raw, "clever cast gave the wrong result");
 #endif // } CPL_SAFE
     return sptr<T>{ from_ptr, unsafe_static_t(0) };
   }
 
-  /// A static cast between pointer types.
+  /// A clever cast between pointer types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
   /// which will always be true unless you use virtual base classes.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline wptr<T> cast_static(const wptr<U>& from_ptr) {
+  template <typename T, typename U> inline wptr<T> cast_clever(const wptr<U>& from_ptr) {
 #ifdef CPL_SAFE // {
     U* from_raw = from_ptr.lock().get();
     T* to_dynamic = dynamic_cast<T*>(from_raw);
     T* to_raw = static_cast<T*>(from_raw);
-    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+    CPL_ASSERT(to_dynamic == to_raw, "clever cast gave the wrong result");
 #endif // } CPL_SAFE
     return wptr<T>{ from_ptr, unsafe_static_t(0) };
   }
 
-  /// A static cast between reference types.
+  /// A clever cast between reference types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
   /// which will always be true unless you use virtual base classes.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uref<T> cast_static(uref<U>&& from_ref) {
+  template <typename T, typename U> inline uref<T> cast_clever(uref<U>&& from_ref) {
 #ifdef CPL_SAFE // {
     U* from_raw = from_ref.get();
     T* to_dynamic = dynamic_cast<T*>(from_raw);
     T* to_raw = static_cast<T*>(from_raw);
-    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+    CPL_ASSERT(to_dynamic == to_raw, "clever cast gave the wrong result");
 #endif // } CPL_SAFE
     return uref<T>{ std::move(from_ref), unsafe_static_t(0) };
   }
 
-  /// A static cast between pointer types.
+  /// A clever cast between pointer types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
   /// which will always be true unless you use virtual base classes.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uptr<T> cast_static(uptr<U>&& from_ptr) {
+  template <typename T, typename U> inline uptr<T> cast_clever(uptr<U>&& from_ptr) {
 #ifdef CPL_SAFE // {
     U* from_raw = from_ptr.get();
     T* to_dynamic = dynamic_cast<T*>(from_raw);
     T* to_raw = static_cast<T*>(from_raw);
-    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+    CPL_ASSERT(to_dynamic == to_raw, "clever cast gave the wrong result");
 #endif // } CPL_SAFE
     return uptr<T>{ std::move(from_ptr), unsafe_static_t(0) };
   }
 
-  /// A static cast between reference types.
+  /// A clever cast between reference types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
   /// which will always be true unless you use virtual base classes.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ref<T> cast_static(const ref<U>& from_ref) {
+  template <typename T, typename U> inline ref<T> cast_clever(const ref<U>& from_ref) {
 #ifdef CPL_SAFE // {
     U* from_raw = const_cast<U*>(from_ref.get());
     T* to_dynamic = dynamic_cast<T*>(from_raw);
     T* to_raw = static_cast<T*>(from_raw);
-    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+    CPL_ASSERT(to_dynamic == to_raw, "clever cast gave the wrong result");
 #endif // } CPL_SAFE
     return ref<T>{ from_ref, unsafe_static_t(0) };
   }
 
-  /// A static cast between pointer types.
+  /// A clever cast between pointer types.
   ///
   /// In safe mode, this verifies that the raw pointer value did not change,
   /// which will always be true unless you use virtual base classes.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ptr<T> cast_static(const ptr<U>& from_ptr) {
+  template <typename T, typename U> inline ptr<T> cast_clever(const ptr<U>& from_ptr) {
 #ifdef CPL_SAFE // {
     U* from_raw = from_ptr.get();
     T* to_dynamic = dynamic_cast<T*>(from_raw);
     T* to_raw = static_cast<T*>(from_raw);
-    CPL_ASSERT(to_dynamic == to_raw, "static cast gave the wrong result");
+    CPL_ASSERT(to_dynamic == to_raw, "clever cast gave the wrong result");
 #endif // } CPL_SAFE
     return ptr<T>{ from_ptr, unsafe_static_t(0) };
   }
 
   /// A reinterpret cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sref<T> cast_reinterpret(const sref<U>& from_ref) {
+  template <typename T, typename U> inline sref<T> cast_reinterpret(const sref<U>& from_ref) {
     return sref<T>{ from_ref, unsafe_raw_t(0) };
   }
 
   /// A reinterpret cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sptr<T> cast_reinterpret(const sptr<U>& from_ptr) {
+  template <typename T, typename U> inline sptr<T> cast_reinterpret(const sptr<U>& from_ptr) {
     return sptr<T>{ from_ptr, unsafe_raw_t(0) };
   }
 
   /// A reinterpret cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline wptr<T> cast_reinterpret(const wptr<U>& from_ptr) {
+  template <typename T, typename U> inline wptr<T> cast_reinterpret(const wptr<U>& from_ptr) {
     return wptr<T>{ from_ptr, unsafe_raw_t(0) };
   }
 
   /// A reinterpret cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uref<T> cast_reinterpret(uref<U>&& from_ref) {
+  template <typename T, typename U> inline uref<T> cast_reinterpret(uref<U>&& from_ref) {
     return uref<T>{ std::move(from_ref), unsafe_raw_t(0) };
   }
 
   /// A reinterpret cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uptr<T> cast_reinterpret(uptr<U>&& from_ptr) {
+  template <typename T, typename U> inline uptr<T> cast_reinterpret(uptr<U>&& from_ptr) {
     return uptr<T>{ std::move(from_ptr), unsafe_raw_t(0) };
   }
 
   /// A reinterpret cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ref<T> cast_reinterpret(const ref<U>& from_ref) {
+  template <typename T, typename U> inline ref<T> cast_reinterpret(const ref<U>& from_ref) {
     return ref<T>{ from_ref, unsafe_raw_t(0) };
   }
 
   /// A reinterpret cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ptr<T> cast_reinterpret(const ptr<U>& from_ptr) {
+  template <typename T, typename U> inline ptr<T> cast_reinterpret(const ptr<U>& from_ptr) {
     return ptr<T>{ from_ptr, unsafe_raw_t(0) };
   }
 
   /// A dynamic cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sref<T> cast_dynamic(const sref<U>& from_ref) {
+  template <typename T, typename U> inline sref<T> cast_dynamic(const sref<U>& from_ref) {
     return sref<T>{ from_ref, unsafe_dynamic_t(0) };
   }
 
   /// A dynamic cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sptr<T> cast_dynamic(const sptr<U>& from_ptr) {
+  template <typename T, typename U> inline sptr<T> cast_dynamic(const sptr<U>& from_ptr) {
     return sptr<T>{ from_ptr, unsafe_dynamic_t(0) };
   }
 
   /// A dynamic cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline wptr<T> cast_dynamic(const wptr<U>& from_ptr) {
+  template <typename T, typename U> inline wptr<T> cast_dynamic(const wptr<U>& from_ptr) {
     return wptr<T>{ from_ptr, unsafe_dynamic_t(0) };
   }
 
   /// A dynamic cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uref<T> cast_dynamic(uref<U>&& from_ref) {
+  template <typename T, typename U> inline uref<T> cast_dynamic(uref<U>&& from_ref) {
     return uref<T>{ std::move(from_ref), unsafe_dynamic_t(0) };
   }
 
   /// A dynamic cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uptr<T> cast_dynamic(uptr<U>&& from_ptr) {
+  template <typename T, typename U> inline uptr<T> cast_dynamic(uptr<U>&& from_ptr) {
     return uptr<T>{ std::move(from_ptr), unsafe_dynamic_t(0) };
   }
 
   /// A dynamic cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ref<T> cast_dynamic(const ref<U>& from_ref) {
+  template <typename T, typename U> inline ref<T> cast_dynamic(const ref<U>& from_ref) {
     return ref<T>{ from_ref, unsafe_dynamic_t(0) };
   }
 
   /// A dynamic cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ptr<T> cast_dynamic(const ptr<U>& from_ptr) {
+  template <typename T, typename U> inline ptr<T> cast_dynamic(const ptr<U>& from_ptr) {
     return ptr<T>{ from_ptr, unsafe_dynamic_t(0) };
   }
 
+  /// A static cast between reference types.
+  template <typename T, typename U> inline sref<T> cast_static(const sref<U>& from_ref) {
+    return sref<T>{ from_ref, unsafe_static_t(0) };
+  }
+
+  /// A static cast between pointer types.
+  template <typename T, typename U> inline sptr<T> cast_static(const sptr<U>& from_ptr) {
+    return sptr<T>{ from_ptr, unsafe_static_t(0) };
+  }
+
+  /// A static cast between pointer types.
+  template <typename T, typename U> inline wptr<T> cast_static(const wptr<U>& from_ptr) {
+    return wptr<T>{ from_ptr, unsafe_static_t(0) };
+  }
+
+  /// A static cast between reference types.
+  template <typename T, typename U> inline uref<T> cast_static(uref<U>&& from_ref) {
+    return uref<T>{ std::move(from_ref), unsafe_static_t(0) };
+  }
+
+  /// A static cast between pointer types.
+  template <typename T, typename U> inline uptr<T> cast_static(uptr<U>&& from_ptr) {
+    return uptr<T>{ std::move(from_ptr), unsafe_static_t(0) };
+  }
+
+  /// A static cast between reference types.
+  template <typename T, typename U> inline ref<T> cast_static(const ref<U>& from_ref) {
+    return ref<T>{ from_ref, unsafe_static_t(0) };
+  }
+
+  /// A static cast between pointer types.
+  template <typename T, typename U> inline ptr<T> cast_static(const ptr<U>& from_ptr) {
+    return ptr<T>{ from_ptr, unsafe_static_t(0) };
+  }
+
   /// A const cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sref<T> cast_const(const sref<U>& from_ref) {
+  template <typename T, typename U> inline sref<T> cast_const(const sref<U>& from_ref) {
     return sref<T>{ from_ref, unsafe_const_t(0) };
   }
 
   /// A const cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline sptr<T> cast_const(const sptr<U>& from_ptr) {
+  template <typename T, typename U> inline sptr<T> cast_const(const sptr<U>& from_ptr) {
     return sptr<T>{ from_ptr, unsafe_const_t(0) };
   }
 
   /// A const cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline wptr<T> cast_const(const wptr<U>& from_ptr) {
+  template <typename T, typename U> inline wptr<T> cast_const(const wptr<U>& from_ptr) {
     return wptr<T>{ from_ptr, unsafe_const_t(0) };
   }
 
   /// A const cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uref<T> cast_const(uref<U>&& from_ref) {
+  template <typename T, typename U> inline uref<T> cast_const(uref<U>&& from_ref) {
     return uref<T>{ std::move(from_ref), unsafe_const_t(0) };
   }
 
   /// A const cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline uptr<T> cast_const(uptr<U>&& from_ptr) {
+  template <typename T, typename U> inline uptr<T> cast_const(uptr<U>&& from_ptr) {
     return uptr<T>{ std::move(from_ptr), unsafe_const_t(0) };
   }
 
   /// A const cast between reference types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ref<T> cast_const(const ref<U>& from_ref) {
+  template <typename T, typename U> inline ref<T> cast_const(const ref<U>& from_ref) {
     return ref<T>{ from_ref, unsafe_const_t(0) };
   }
 
   /// A const cast between pointer types.
-  template <typename T, typename U, typename = typename std::enable_if<std::is_convertible<T*, U*>::value>::type>
-  inline ptr<T> cast_const(const ptr<U>& from_ptr) {
+  template <typename T, typename U> inline ptr<T> cast_const(const ptr<U>& from_ptr) {
     return ptr<T>{ from_ptr, unsafe_const_t(0) };
   }
 

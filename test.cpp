@@ -473,6 +473,10 @@ namespace test {
   THEN("if we copy it to a reference to a base class") {                          \
     cpl::REF<Foo> foo_ref{ PASS(bar_ref) };                                       \
     REQUIRE(Foo::live_objects.size() == 1);                                       \
+    THEN("we can clever_cast it back to a reference to the derived class") {      \
+      cpl::REF<Bar> cast_bar_ref = cpl::cast_clever<Bar>(PASS(foo_ref));          \
+      REQUIRE(Foo::live_objects.size() == 1);                                     \
+    }                                                                             \
     THEN("we can static_cast it back to a reference to the derived class") {      \
       cpl::REF<Bar> cast_bar_ref = cpl::cast_static<Bar>(PASS(foo_ref));          \
       REQUIRE(Foo::live_objects.size() == 1);                                     \
@@ -504,6 +508,10 @@ namespace test {
   THEN("if we copy it to a pointer to a base class") {                          \
     cpl::PTR<Foo> foo_ptr{ PASS(bar_ptr) };                                     \
     REQUIRE(Foo::live_objects.size() == 1);                                     \
+    THEN("we can clever_cast it back to a pointer to the derived class") {      \
+      cpl::PTR<Bar> cast_bar_ptr = cpl::cast_clever<Bar>(PASS(foo_ptr));        \
+      REQUIRE(Foo::live_objects.size() == 1);                                   \
+    }                                                                           \
     THEN("we can static_cast it back to a pointer to the derived class") {      \
       cpl::PTR<Bar> cast_bar_ptr = cpl::cast_static<Bar>(PASS(foo_ptr));        \
       REQUIRE(Foo::live_objects.size() == 1);                                   \
