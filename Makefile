@@ -59,7 +59,8 @@ bin/.tested.safe: bin/test.safe
 html: html/index.html
 
 html/index.html: .doxygen.cfg cpl.hpp test.cpp README.md | src
-	rm -rf html
+	mkdir -p html
+	rm -rf html/*
 	export CPL_VERSION="$(GIT_VERSION)"; doxygen .doxygen.cfg
 
 clean:

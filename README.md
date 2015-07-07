@@ -5,7 +5,9 @@ CPL {#mainpage}
 
 The Clever Protection Library (CPL) tries to provide additional safety for C++
 projects. For details, see the description of the
-<code>[cpl](namespacecpl.html)</code> namespace.
+<code>[cpl](http://orenbenkiki.github.io/cpl/namespacecpl.html#details)</code>
+namespace in the Doxygen-generated
+<code>[documentation](http://orenbenkiki.github.io/cpl)</code>.
 
 ## Using
 
