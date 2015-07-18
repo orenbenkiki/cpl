@@ -57,7 +57,7 @@ SOFTWARE.
 /// To update this, run `make version`. This should be done before every
 /// commit. It should arguably be managed by git hooks, but it really isn't
 /// that much of a hassle.
-#define CPL_VERSION "0.2.3"
+#define CPL_VERSION "0.2.4"
 
 #ifdef DOXYGEN // {
 
@@ -686,6 +686,9 @@ namespace cpl {
       : shared<T>(std::move(other)) {
     }
 
+    /// Forbid testing for null.
+    explicit operator bool() const = delete;
+
     /// Forbid clearing the reference.
     void reset() = delete;
 
@@ -902,6 +905,9 @@ namespace cpl {
       : unique<T>(std::move(other)) {
       CPL_ASSERT(unique<T>::get(), "constructing a null reference");
     }
+
+    /// Forbid testing for null.
+    operator bool() const = delete;
 
     /// Forbid clearing the reference.
     void reset() = delete;

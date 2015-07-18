@@ -198,8 +198,8 @@ namespace test {
   VERIFY_INVALID_REF(PTR);      \
   REQUIRE(!PTR)
 
-/// verify that an indirection does not compare equal to null.
-#define VERIFY_NOT_NULL(IND)       \
+/// verify that a pointer does not compare equal to null.
+#define VERIFY_NOT_NULL_PTR(IND)   \
   REQUIRE(IND != nullptr);         \
   REQUIRE_FALSE(IND == nullptr);   \
   if (!(IND > nullptr)) {          \
@@ -207,6 +207,17 @@ namespace test {
   }                                \
   if (!(IND < nullptr)) {          \
     REQUIRE_FALSE(IND <= nullptr); \
+  }
+
+/// verify that a reference does not compare equal to null.
+#define VERIFY_NOT_NULL_REF(IND)         \
+  REQUIRE(IND.get() != nullptr);         \
+  REQUIRE_FALSE(IND.get() == nullptr);   \
+  if (!(IND.get() > nullptr)) {          \
+    REQUIRE_FALSE(IND.get() >= nullptr); \
+  }                                      \
+  if (!(IND.get() < nullptr)) {          \
+    REQUIRE_FALSE(IND.get() <= nullptr); \
   }
 
 /// verify that an indirection does compare equal to null.
@@ -679,7 +690,7 @@ namespace test {
       int bar = __LINE__;
       cpl::sref<Bar> bar_ref = cpl::make_sref<Bar>(foo, bar);
       REQUIRE(Foo::live_objects.size() == 1);
-      VERIFY_NOT_NULL(bar_ref);
+      VERIFY_NOT_NULL_REF(bar_ref);
       VERIFY_VALID_COPIED_REF_CONSTRUCTION(sref);
       VERIFY_VALID_MOVED_REF_CONSTRUCTION(sref);
     }
@@ -702,6 +713,9 @@ namespace test {
   /// Verify `cpl::sref` is protected against invalid construction.
   VERIFY_INVALID_REF_CONSTRUCTION(sref, sptr, cpl::make_sref<T>(0), cpl::make_sref<const T>(0), COPY);
 
+  /// Verify we can't test a shared reference for null-ness.
+  MUST_NOT_COMPILE(Foo, bool(*(cpl::sref<T>*)&s_foo_sref), "testing shared references");
+
   TEST_CASE("casting an sref") {
     REQUIRE(Foo::live_objects.size() == 0);
     GIVEN("an sref") {
@@ -721,7 +735,7 @@ namespace test {
       int bar = __LINE__;
       cpl::sptr<Bar> bar_ptr{ cpl::make_sptr<Bar>(foo, bar) };
       REQUIRE(Foo::live_objects.size() == 1);
-      VERIFY_NOT_NULL(bar_ptr);
+      VERIFY_NOT_NULL_PTR(bar_ptr);
       VERIFY_VALID_COPIED_PTR_CONSTRUCTION(sptr);
       VERIFY_VALID_MOVED_PTR_CONSTRUCTION(sptr);
       THEN("we can ask it for a shared reference") {
@@ -786,7 +800,7 @@ namespace test {
       int bar = __LINE__;
       cpl::uref<Bar> bar_ref = cpl::make_uref<Bar>(foo, bar);
       REQUIRE(Foo::live_objects.size() == 1);
-      VERIFY_NOT_NULL(bar_ref);
+      VERIFY_NOT_NULL_REF(bar_ref);
       VERIFY_VALID_MOVED_REF_CONSTRUCTION(uref);
     }
     VERIFY_NULL_REF_CONSTRUCTION(uref, uptr, MOVE);
@@ -808,6 +822,9 @@ namespace test {
   /// Verify `cpl::uref` is protected against invalid construction.
   VERIFY_INVALID_REF_CONSTRUCTION(uref, uptr, cpl::make_uref<T>(0), cpl::make_uref<const T>(0), MOVE);
 
+  /// Verify we can't test a unique reference for null-ness.
+  MUST_NOT_COMPILE(Foo, bool(*(cpl::uref<T>*)&s_foo_uref), "testing unique references");
+
 #ifdef MAKE_SFINAE_RESPOND_TO_DELETED_FUNCTIONS // {
   /// Ensure there's no copying `cpl::uref`.
   MUST_NOT_COMPILE(Foo, cpl::uref<T>{ s_foo_uref }, "copying unique references");
@@ -820,7 +837,7 @@ namespace test {
       int bar = __LINE__;
       cpl::uref<Bar> bar_ref = cpl::make_uref<Bar>(foo, bar);
       REQUIRE(Foo::live_objects.size() == 1);
-      VERIFY_NOT_NULL(bar_ref);
+      VERIFY_NOT_NULL_REF(bar_ref);
       VERIFY_REF_CASTS(uref, MOVE);
     }
     REQUIRE(Foo::live_objects.size() == 0);
@@ -976,6 +993,9 @@ namespace test {
   /// Verify `cpl::ref` is protected against invalid construction.
   VERIFY_INVALID_REF_CONSTRUCTION(
     ref, ptr, cpl::ref<T>(cpl::unsafe_ref<T>(*(T*) nullptr)), cpl::ref<const T>(cpl::unsafe_ref<T>(*(T*) nullptr)), COPY);
+
+  /// Verify we can't test a reference for null-ness.
+  MUST_NOT_COMPILE(Foo, bool(*(cpl::ref<T>*)&s_foo_ref), "testing references");
 
   TEST_CASE("casting a ref") {
     REQUIRE(Foo::live_objects.size() == 0);
