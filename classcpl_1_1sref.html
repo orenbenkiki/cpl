@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">CPL
-   &#160;<span id="projectnumber">0.2.3</span>
+   &#160;<span id="projectnumber">0.2.4</span>
    </div>
   </td>
  </tr>
@@ -140,6 +140,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a48458c2dff5f63426d28b74255ddd761"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcpl_1_1sref.html#a48458c2dff5f63426d28b74255ddd761">sref</a> (<a class="el" href="classcpl_1_1sref.html">sref</a>&lt; U &gt; &amp;&amp;other)</td></tr>
 <tr class="memdesc:a48458c2dff5f63426d28b74255ddd761"><td class="mdescLeft">&#160;</td><td class="mdescRight">Share with another shared reference.  <a href="#a48458c2dff5f63426d28b74255ddd761"></a><br/></td></tr>
 <tr class="separator:a48458c2dff5f63426d28b74255ddd761"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37020b99af801cccf5f67ded5603a199"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcpl_1_1sref.html#a37020b99af801cccf5f67ded5603a199">operator bool</a> () const =delete</td></tr>
+<tr class="memdesc:a37020b99af801cccf5f67ded5603a199"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forbid testing for null.  <a href="#a37020b99af801cccf5f67ded5603a199"></a><br/></td></tr>
+<tr class="separator:a37020b99af801cccf5f67ded5603a199"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac85317d130e5b92dcf9100d0ba7bf6c1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcpl_1_1sref.html#ac85317d130e5b92dcf9100d0ba7bf6c1">reset</a> ()=delete</td></tr>
 <tr class="memdesc:ac85317d130e5b92dcf9100d0ba7bf6c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forbid clearing the reference.  <a href="#ac85317d130e5b92dcf9100d0ba7bf6c1"></a><br/></td></tr>
 <tr class="separator:ac85317d130e5b92dcf9100d0ba7bf6c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -384,6 +387,33 @@ template&lt;typename U , typename  = typename std::enable_if&lt;std::is_converti
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a37020b99af801cccf5f67ded5603a199"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classcpl_1_1sref.html">cpl::sref</a>&lt; T &gt;::operator bool </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">explicit</span><span class="mlabel">delete</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Forbid testing for null. </p>
+
+</div>
+</div>
 <a class="anchor" id="a6cc7016416ca5ac706852dbd21f0b042"></a>
 <div class="memitem">
 <div class="memproto">
@@ -409,7 +439,7 @@ template&lt;typename T&gt; </div>
 
 <p>Access the value. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00711">711</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00714">714</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -558,7 +588,7 @@ template&lt;typename U &gt; </div>
 
 <p>Forbid clearing the reference. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00693">693</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00696">696</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -600,7 +630,7 @@ template&lt;typename U , typename D &gt; </div>
 
 <p>Forbid clearing the reference. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00699">699</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00702">702</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -648,7 +678,7 @@ template&lt;typename U , typename D , typename A &gt; </div>
 
 <p>Forbid clearing the reference. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00705">705</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00708">708</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -658,7 +688,7 @@ template&lt;typename U , typename D , typename A &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 7 2015 08:22:05 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 18 2015 08:15:26 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.2
 </small></address>

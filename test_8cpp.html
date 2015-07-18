@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">CPL
-   &#160;<span id="projectnumber">0.2.3</span>
+   &#160;<span id="projectnumber">0.2.4</span>
    </div>
   </td>
  </tr>
@@ -149,9 +149,12 @@ Macros</h2></td></tr>
 <tr class="memitem:aaaa2354dece1dbd0a7ba2ca8336204be"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="test_8cpp.html#aaaa2354dece1dbd0a7ba2ca8336204be">VERIFY_INVALID_PTR</a>(PTR)</td></tr>
 <tr class="memdesc:aaaa2354dece1dbd0a7ba2ca8336204be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify that a pointer is invalid and detected by CPL.  <a href="#aaaa2354dece1dbd0a7ba2ca8336204be"></a><br/></td></tr>
 <tr class="separator:aaaa2354dece1dbd0a7ba2ca8336204be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8861e90472ba670dc18c326f5382848"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="test_8cpp.html#ae8861e90472ba670dc18c326f5382848">VERIFY_NOT_NULL</a>(IND)</td></tr>
-<tr class="memdesc:ae8861e90472ba670dc18c326f5382848"><td class="mdescLeft">&#160;</td><td class="mdescRight">verify that an indirection does not compare equal to null.  <a href="#ae8861e90472ba670dc18c326f5382848"></a><br/></td></tr>
-<tr class="separator:ae8861e90472ba670dc18c326f5382848"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5820d02c80f75e0000f088d22e127474"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="test_8cpp.html#a5820d02c80f75e0000f088d22e127474">VERIFY_NOT_NULL_PTR</a>(IND)</td></tr>
+<tr class="memdesc:a5820d02c80f75e0000f088d22e127474"><td class="mdescLeft">&#160;</td><td class="mdescRight">verify that a pointer does not compare equal to null.  <a href="#a5820d02c80f75e0000f088d22e127474"></a><br/></td></tr>
+<tr class="separator:a5820d02c80f75e0000f088d22e127474"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a891b3fe8a279a27f5dac5c66566fb507"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="test_8cpp.html#a891b3fe8a279a27f5dac5c66566fb507">VERIFY_NOT_NULL_REF</a>(IND)</td></tr>
+<tr class="memdesc:a891b3fe8a279a27f5dac5c66566fb507"><td class="mdescLeft">&#160;</td><td class="mdescRight">verify that a reference does not compare equal to null.  <a href="#a891b3fe8a279a27f5dac5c66566fb507"></a><br/></td></tr>
+<tr class="separator:a891b3fe8a279a27f5dac5c66566fb507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a542b861eef45ff1c90a697bf2a42e5d7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="test_8cpp.html#a542b861eef45ff1c90a697bf2a42e5d7">VERIFY_NULL</a>(IND)</td></tr>
 <tr class="memdesc:a542b861eef45ff1c90a697bf2a42e5d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">verify that an indirection does compare equal to null.  <a href="#a542b861eef45ff1c90a697bf2a42e5d7"></a><br/></td></tr>
 <tr class="separator:a542b861eef45ff1c90a697bf2a42e5d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -267,6 +270,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ae26d91c624e8e001b72375ac83ffaff7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">test::VERIFY_INVALID_REF_CONSTRUCTION</a> (<a class="el" href="classsref.html">sref</a>, sptr, <a class="el" href="namespacecpl.html#aa69747258a545d1281eb66827c56c3dc">cpl::make_sref</a>&lt; T &gt;(0), <a class="el" href="namespacecpl.html#aa69747258a545d1281eb66827c56c3dc">cpl::make_sref</a>&lt; const T &gt;(0), <a class="el" href="test_8cpp.html#a62780445b9cd8dca10c6f8537557ec6d">COPY</a>)</td></tr>
 <tr class="memdesc:ae26d91c624e8e001b72375ac83ffaff7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify <code><a class="el" href="classcpl_1_1sref.html" title="A reference that uses reference counting.">cpl::sref</a></code> is protected against invalid construction.  <a href="#ae26d91c624e8e001b72375ac83ffaff7"></a><br/></td></tr>
 <tr class="separator:ae26d91c624e8e001b72375ac83ffaff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85401845f582cfede922bb2a3b750baf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a85401845f582cfede922bb2a3b750baf">test::MUST_NOT_COMPILE</a> (Foo, bool(*(<a class="el" href="classcpl_1_1sref.html">cpl::sref</a>&lt; T &gt; *)&amp;s_foo_sref),&quot;testing shared references&quot;)</td></tr>
+<tr class="memdesc:a85401845f582cfede922bb2a3b750baf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify we can't test a shared reference for null-ness.  <a href="#a85401845f582cfede922bb2a3b750baf"></a><br/></td></tr>
+<tr class="separator:a85401845f582cfede922bb2a3b750baf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e2a081916f62705783d179813a7280f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a3e2a081916f62705783d179813a7280f">test::TEST_CASE</a> (&quot;casting an <a class="el" href="classsref.html">sref</a>&quot;)</td></tr>
 <tr class="separator:a3e2a081916f62705783d179813a7280f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7fdcd39f9c676992ff106f0c4a70977"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#af7fdcd39f9c676992ff106f0c4a70977">test::TEST_CASE</a> (&quot;constructing an sptr&quot;)</td></tr>
@@ -285,6 +291,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a507c61403f2887e1b0063e7cc3e83ebd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a507c61403f2887e1b0063e7cc3e83ebd">test::VERIFY_INVALID_REF_CONSTRUCTION</a> (<a class="el" href="classuref.html">uref</a>, uptr, <a class="el" href="namespacecpl.html#a3c8cb4c0096c46fef78b5f07f15f4008">cpl::make_uref</a>&lt; T &gt;(0), <a class="el" href="namespacecpl.html#a3c8cb4c0096c46fef78b5f07f15f4008">cpl::make_uref</a>&lt; const T &gt;(0), <a class="el" href="test_8cpp.html#a7d53160e7a0a05a69892a1a34b00b0a2">MOVE</a>)</td></tr>
 <tr class="memdesc:a507c61403f2887e1b0063e7cc3e83ebd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify <code><a class="el" href="classcpl_1_1uref.html" title="A reference that deletes the data when it is deleted.">cpl::uref</a></code> is protected against invalid construction.  <a href="#a507c61403f2887e1b0063e7cc3e83ebd"></a><br/></td></tr>
 <tr class="separator:a507c61403f2887e1b0063e7cc3e83ebd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0bc37718b2eac90abd893d3015ef4e0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#ac0bc37718b2eac90abd893d3015ef4e0">test::MUST_NOT_COMPILE</a> (Foo, bool(*(<a class="el" href="classcpl_1_1uref.html">cpl::uref</a>&lt; T &gt; *)&amp;s_foo_uref),&quot;testing unique references&quot;)</td></tr>
+<tr class="memdesc:ac0bc37718b2eac90abd893d3015ef4e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify we can't test a unique reference for null-ness.  <a href="#ac0bc37718b2eac90abd893d3015ef4e0"></a><br/></td></tr>
+<tr class="separator:ac0bc37718b2eac90abd893d3015ef4e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a301cdac3e25a61fe2226bafb73f037a3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a301cdac3e25a61fe2226bafb73f037a3">test::TEST_CASE</a> (&quot;casting a <a class="el" href="classuref.html">uref</a>&quot;)</td></tr>
 <tr class="separator:a301cdac3e25a61fe2226bafb73f037a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc8aaebb21f3f4b5d95520933824a6fd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#afc8aaebb21f3f4b5d95520933824a6fd">test::TEST_CASE</a> (&quot;constructing a uptr&quot;)</td></tr>
@@ -303,6 +312,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ab415db1615995bec4cbb119b6fb3c3da"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#ab415db1615995bec4cbb119b6fb3c3da">test::VERIFY_INVALID_REF_CONSTRUCTION</a> (<a class="el" href="classref.html">ref</a>, ptr, <a class="el" href="classcpl_1_1ref.html">cpl::ref</a>&lt; T &gt;(<a class="el" href="namespacecpl.html#a205c84d0c8d8291953c58fa3a9f7a0df">cpl::unsafe_ref</a>&lt; T &gt;(*(T *) nullptr)), <a class="el" href="classcpl_1_1ref.html">cpl::ref</a>&lt; const T &gt;(<a class="el" href="namespacecpl.html#a205c84d0c8d8291953c58fa3a9f7a0df">cpl::unsafe_ref</a>&lt; T &gt;(*(T *) nullptr)), <a class="el" href="test_8cpp.html#a62780445b9cd8dca10c6f8537557ec6d">COPY</a>)</td></tr>
 <tr class="memdesc:ab415db1615995bec4cbb119b6fb3c3da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify <code><a class="el" href="classcpl_1_1ref.html" title="A reference for data whose lifetime is determined elsewhere.">cpl::ref</a></code> is protected against invalid construction.  <a href="#ab415db1615995bec4cbb119b6fb3c3da"></a><br/></td></tr>
 <tr class="separator:ab415db1615995bec4cbb119b6fb3c3da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a850d92c9db86e3f2331e88eea98ed64d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a850d92c9db86e3f2331e88eea98ed64d">test::MUST_NOT_COMPILE</a> (Foo, bool(*(<a class="el" href="classcpl_1_1ref.html">cpl::ref</a>&lt; T &gt; *)&amp;s_foo_ref),&quot;testing references&quot;)</td></tr>
+<tr class="memdesc:a850d92c9db86e3f2331e88eea98ed64d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify we can't test a reference for null-ness.  <a href="#a850d92c9db86e3f2331e88eea98ed64d"></a><br/></td></tr>
+<tr class="separator:a850d92c9db86e3f2331e88eea98ed64d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12793195117a4643cf4398fcba870973"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a12793195117a4643cf4398fcba870973">test::TEST_CASE</a> (&quot;casting a <a class="el" href="classref.html">ref</a>&quot;)</td></tr>
 <tr class="separator:a12793195117a4643cf4398fcba870973"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc09243895b6649168cc60e4712faa6f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#afc09243895b6649168cc60e4712faa6f">test::TEST_CASE</a> (&quot;constructing a ptr&quot;)</td></tr>
@@ -496,7 +508,7 @@ Variables</h2></td></tr>
 
 <p>Used for simple copy parameters. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00259">259</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00270">270</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -526,7 +538,7 @@ Variables</h2></td></tr>
 
 <p>Use in <a class="el" href="test_8cpp.html#a5e77b21b06eca254af1e4682c1d8aa2e">VERIFY_BORROWING</a> when the value has an explicit cast to a <a class="el" href="classcpl_1_1ref.html">cpl::ref</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01101">1101</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01121">1121</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -556,7 +568,7 @@ Variables</h2></td></tr>
 
 <p>Use in <a class="el" href="test_8cpp.html#a5e77b21b06eca254af1e4682c1d8aa2e">VERIFY_BORROWING</a> when the value has an implicit cast to a <a class="el" href="classcpl_1_1ref.html">cpl::ref</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01097">1097</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01117">1117</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -576,7 +588,7 @@ Variables</h2></td></tr>
 
 <p>Use for moving parameters. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00262">262</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00273">273</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -716,7 +728,7 @@ Variables</h2></td></tr>
 
 <p>Verify we cab borrow something. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01138">1138</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01158">1158</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -752,7 +764,7 @@ Variables</h2></td></tr>
 
 <p>Ensure converting a pointer to a reference works as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00577">577</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00588">588</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -788,7 +800,7 @@ Variables</h2></td></tr>
 
 <p>Ensure converting a reference to a pointer works as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00538">538</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00549">549</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -811,7 +823,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify a borrowed pointer reacts to the data being deleted. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01111">1111</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01131">1131</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -834,7 +846,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify a borrowed reference reacts to the data being deleted. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01104">1104</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01124">1124</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -854,7 +866,7 @@ Variables</h2></td></tr>
 
 <p>Verify that the data pointed to has been deleted. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00225">225</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00236">236</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -874,7 +886,7 @@ Variables</h2></td></tr>
 
 <p>Verify that the data referred to has been deleted. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00222">222</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00233">233</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -934,7 +946,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Ensure attempts for invalid pointer construction will fail. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00461">461</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00472">472</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1015,16 +1027,16 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Ensure attempts for invalid reference construction will fail. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00447">447</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00458">458</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ae8861e90472ba670dc18c326f5382848"></a>
+<a class="anchor" id="a5820d02c80f75e0000f088d22e127474"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define VERIFY_NOT_NULL</td>
+          <td class="memname">#define VERIFY_NOT_NULL_PTR</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">IND</td><td>)</td>
@@ -1041,9 +1053,37 @@ Variables</h2></td></tr>
 <div class="line">    REQUIRE_FALSE(IND &lt;= <span class="keyword">nullptr</span>); \</div>
 <div class="line">  }</div>
 </div><!-- fragment -->
-<p>verify that an indirection does not compare equal to null. </p>
+<p>verify that a pointer does not compare equal to null. </p>
 
 <p>Definition at line <a class="el" href="test_8cpp_source.html#l00202">202</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a891b3fe8a279a27f5dac5c66566fb507"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define VERIFY_NOT_NULL_REF</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">IND</td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">REQUIRE(IND.get() != <span class="keyword">nullptr</span>);         \</div>
+<div class="line">  REQUIRE_FALSE(IND.get() == <span class="keyword">nullptr</span>);   \</div>
+<div class="line">  if (!(IND.get() &gt; <span class="keyword">nullptr</span>)) {          \</div>
+<div class="line">    REQUIRE_FALSE(IND.get() &gt;= <span class="keyword">nullptr</span>); \</div>
+<div class="line">  }                                      \</div>
+<div class="line">  if (!(IND.get() &lt; <span class="keyword">nullptr</span>)) {          \</div>
+<div class="line">    REQUIRE_FALSE(IND.get() &lt;= <span class="keyword">nullptr</span>); \</div>
+<div class="line">  }</div>
+</div><!-- fragment -->
+<p>verify that a reference does not compare equal to null. </p>
+
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00213">213</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1067,7 +1107,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>verify that an indirection does compare equal to null. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00213">213</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00224">224</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1097,7 +1137,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify a pointer provides null construction. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00434">434</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00445">445</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1142,7 +1182,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify a reference detects being created from a null pointer. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00334">334</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00345">345</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1200,7 +1240,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Ensure casting a pointer works as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00507">507</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00518">518</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1230,7 +1270,7 @@ Variables</h2></td></tr>
 
 <p>Ensure casting a reference works as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00472">472</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00483">483</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1254,7 +1294,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify a borrowed pointer reacts to the data being deleted. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01131">1131</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01151">1151</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1278,7 +1318,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify a borrowed reference reacts to the data being deleted. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01124">1124</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01144">1144</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1301,7 +1341,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify that a pointer type copy construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00346">346</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00357">357</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1324,7 +1364,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify that a reference type copy construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00265">265</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00276">276</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1347,7 +1387,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify that a pointer type move construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00352">352</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00363">363</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1370,7 +1410,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify that a reference type move construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00271">271</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00282">282</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1428,7 +1468,7 @@ Variables</h2></td></tr>
 
 <p>Verify that a pointer type construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00364">364</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00375">375</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1486,7 +1526,7 @@ Variables</h2></td></tr>
 
 <p>Verify that a reference type construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00283">283</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00294">294</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1509,7 +1549,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify that a pointer type move construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00358">358</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00369">369</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1532,7 +1572,7 @@ Variables</h2></td></tr>
 </div><!-- fragment -->
 <p>Verify that a reference type move construction behaves as expected. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00277">277</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00288">288</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1552,7 +1592,7 @@ Variables</h2></td></tr>
 
 <p>Enable testing reset of the original value. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01118">1118</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01138">1138</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1572,7 +1612,7 @@ Variables</h2></td></tr>
 
 <p>Disable testing reset of the original value. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01121">1121</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01141">1141</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1597,7 +1637,7 @@ Variables</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 7 2015 08:22:05 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 18 2015 08:15:26 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.2
 </small></address>

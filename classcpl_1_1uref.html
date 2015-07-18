@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">CPL
-   &#160;<span id="projectnumber">0.2.3</span>
+   &#160;<span id="projectnumber">0.2.4</span>
    </div>
   </td>
  </tr>
@@ -134,6 +134,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aae58635bbee6fff8a1ec3858ecaeb8c2"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classcpl_1_1uref.html#aae58635bbee6fff8a1ec3858ecaeb8c2">uref</a> (<a class="el" href="classcpl_1_1uptr.html">uptr</a>&lt; U &gt; &amp;&amp;other)</td></tr>
 <tr class="memdesc:aae58635bbee6fff8a1ec3858ecaeb8c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy a pointer.  <a href="#aae58635bbee6fff8a1ec3858ecaeb8c2"></a><br/></td></tr>
 <tr class="separator:aae58635bbee6fff8a1ec3858ecaeb8c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2093118be400adaf63f941262ebda196"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcpl_1_1uref.html#a2093118be400adaf63f941262ebda196">operator bool</a> () const =delete</td></tr>
+<tr class="memdesc:a2093118be400adaf63f941262ebda196"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forbid testing for null.  <a href="#a2093118be400adaf63f941262ebda196"></a><br/></td></tr>
+<tr class="separator:a2093118be400adaf63f941262ebda196"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3081438ece1bb6a47c0aabc0e9229aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcpl_1_1uref.html#ab3081438ece1bb6a47c0aabc0e9229aa">reset</a> ()=delete</td></tr>
 <tr class="memdesc:ab3081438ece1bb6a47c0aabc0e9229aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forbid clearing the reference.  <a href="#ab3081438ece1bb6a47c0aabc0e9229aa"></a><br/></td></tr>
 <tr class="separator:ab3081438ece1bb6a47c0aabc0e9229aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -175,7 +178,7 @@ class cpl::uref&lt; T &gt;</h3>
 <p>A reference that deletes the data when it is deleted. </p>
 <p>Due to the need to be able to return these, we must make them movable, so this means we can't statically completely prevent the code from creating null references. The safe version ensures these are never used. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00872">872</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00875">875</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a28f5878e06f1135b29d413bfc5a0baa2"></a>
 <div class="memitem">
@@ -213,7 +216,7 @@ template&lt;typename T&gt; </div>
 
 <p>Unsafe construction from a raw pointer. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00875">875</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00878">878</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -255,7 +258,7 @@ template&lt;typename U , typename C &gt; </div>
 
 <p>Cast construction from a different type of unique indirection. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00880">880</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00883">883</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -287,7 +290,7 @@ template&lt;typename U , typename  = typename std::enable_if&lt;std::is_converti
 
 <p>Copy a reference. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00886">886</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00889">889</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -319,11 +322,38 @@ template&lt;typename U , typename  = typename std::enable_if&lt;std::is_converti
 
 <p>Copy a pointer. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00901">901</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00904">904</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a2093118be400adaf63f941262ebda196"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classcpl_1_1uref.html">cpl::uref</a>&lt; T &gt;::operator bool </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">delete</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Forbid testing for null. </p>
+
+</div>
+</div>
 <a class="anchor" id="a3bb3e98f1c488d35ffb615ed32864df9"></a>
 <div class="memitem">
 <div class="memproto">
@@ -349,7 +379,7 @@ template&lt;typename T&gt; </div>
 
 <p>Access the value. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00922">922</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00928">928</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -378,7 +408,7 @@ template&lt;typename T&gt; </div>
 
 <p>Access the value. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00806">806</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00809">809</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -432,7 +462,7 @@ template&lt;typename T&gt; </div>
 
 <p>Access a data member. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00813">813</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00816">816</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -464,7 +494,7 @@ template&lt;typename U , typename  = typename std::enable_if&lt;std::is_converti
 
 <p>Assign a reference. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00893">893</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00896">896</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -521,7 +551,7 @@ template&lt;typename T&gt; </div>
 
 <p>Forbid clearing the reference. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00910">910</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00916">916</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -551,7 +581,7 @@ template&lt;typename T&gt; </div>
 
 <p>Forbid clearing the reference. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00916">916</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00922">922</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -578,7 +608,7 @@ template&lt;typename T&gt; </div>
 
 <p>Track the lifetime of the data. </p>
 
-<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00739">739</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
+<p>Definition at line <a class="el" href="cpl_8hpp_source.html#l00742">742</a> of file <a class="el" href="cpl_8hpp_source.html">cpl.hpp</a>.</p>
 
 </div>
 </div>
@@ -610,7 +640,7 @@ template&lt;typename T&gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 7 2015 08:22:06 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 18 2015 08:15:27 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.2
 </small></address>

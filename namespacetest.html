@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">CPL
-   &#160;<span id="projectnumber">0.2.3</span>
+   &#160;<span id="projectnumber">0.2.4</span>
    </div>
   </td>
  </tr>
@@ -127,6 +127,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ae26d91c624e8e001b72375ac83ffaff7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a> (<a class="el" href="classsref.html">sref</a>, sptr, <a class="el" href="namespacecpl.html#aa69747258a545d1281eb66827c56c3dc">cpl::make_sref</a>&lt; T &gt;(0), <a class="el" href="namespacecpl.html#aa69747258a545d1281eb66827c56c3dc">cpl::make_sref</a>&lt; const T &gt;(0), <a class="el" href="test_8cpp.html#a62780445b9cd8dca10c6f8537557ec6d">COPY</a>)</td></tr>
 <tr class="memdesc:ae26d91c624e8e001b72375ac83ffaff7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify <code><a class="el" href="classcpl_1_1sref.html" title="A reference that uses reference counting.">cpl::sref</a></code> is protected against invalid construction.  <a href="#ae26d91c624e8e001b72375ac83ffaff7"></a><br/></td></tr>
 <tr class="separator:ae26d91c624e8e001b72375ac83ffaff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85401845f582cfede922bb2a3b750baf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a85401845f582cfede922bb2a3b750baf">MUST_NOT_COMPILE</a> (<a class="el" href="structtest_1_1Foo.html">Foo</a>, bool(*(<a class="el" href="classcpl_1_1sref.html">cpl::sref</a>&lt; T &gt; *)&amp;<a class="el" href="namespacetest.html#a83594ce7424ce324b3ac1e1bb58656cf">s_foo_sref</a>),&quot;testing shared references&quot;)</td></tr>
+<tr class="memdesc:a85401845f582cfede922bb2a3b750baf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify we can't test a shared reference for null-ness.  <a href="#a85401845f582cfede922bb2a3b750baf"></a><br/></td></tr>
+<tr class="separator:a85401845f582cfede922bb2a3b750baf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e2a081916f62705783d179813a7280f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a3e2a081916f62705783d179813a7280f">TEST_CASE</a> (&quot;casting an <a class="el" href="classsref.html">sref</a>&quot;)</td></tr>
 <tr class="separator:a3e2a081916f62705783d179813a7280f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7fdcd39f9c676992ff106f0c4a70977"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#af7fdcd39f9c676992ff106f0c4a70977">TEST_CASE</a> (&quot;constructing an sptr&quot;)</td></tr>
@@ -145,6 +148,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a507c61403f2887e1b0063e7cc3e83ebd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a507c61403f2887e1b0063e7cc3e83ebd">VERIFY_INVALID_REF_CONSTRUCTION</a> (<a class="el" href="classuref.html">uref</a>, uptr, <a class="el" href="namespacecpl.html#a3c8cb4c0096c46fef78b5f07f15f4008">cpl::make_uref</a>&lt; T &gt;(0), <a class="el" href="namespacecpl.html#a3c8cb4c0096c46fef78b5f07f15f4008">cpl::make_uref</a>&lt; const T &gt;(0), <a class="el" href="test_8cpp.html#a7d53160e7a0a05a69892a1a34b00b0a2">MOVE</a>)</td></tr>
 <tr class="memdesc:a507c61403f2887e1b0063e7cc3e83ebd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify <code><a class="el" href="classcpl_1_1uref.html" title="A reference that deletes the data when it is deleted.">cpl::uref</a></code> is protected against invalid construction.  <a href="#a507c61403f2887e1b0063e7cc3e83ebd"></a><br/></td></tr>
 <tr class="separator:a507c61403f2887e1b0063e7cc3e83ebd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0bc37718b2eac90abd893d3015ef4e0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#ac0bc37718b2eac90abd893d3015ef4e0">MUST_NOT_COMPILE</a> (<a class="el" href="structtest_1_1Foo.html">Foo</a>, bool(*(<a class="el" href="classcpl_1_1uref.html">cpl::uref</a>&lt; T &gt; *)&amp;<a class="el" href="namespacetest.html#a820f1443e37016fb882a4d54e2de6991">s_foo_uref</a>),&quot;testing unique references&quot;)</td></tr>
+<tr class="memdesc:ac0bc37718b2eac90abd893d3015ef4e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify we can't test a unique reference for null-ness.  <a href="#ac0bc37718b2eac90abd893d3015ef4e0"></a><br/></td></tr>
+<tr class="separator:ac0bc37718b2eac90abd893d3015ef4e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a301cdac3e25a61fe2226bafb73f037a3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a301cdac3e25a61fe2226bafb73f037a3">TEST_CASE</a> (&quot;casting a <a class="el" href="classuref.html">uref</a>&quot;)</td></tr>
 <tr class="separator:a301cdac3e25a61fe2226bafb73f037a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc8aaebb21f3f4b5d95520933824a6fd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#afc8aaebb21f3f4b5d95520933824a6fd">TEST_CASE</a> (&quot;constructing a uptr&quot;)</td></tr>
@@ -163,6 +169,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ab415db1615995bec4cbb119b6fb3c3da"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#ab415db1615995bec4cbb119b6fb3c3da">VERIFY_INVALID_REF_CONSTRUCTION</a> (<a class="el" href="classref.html">ref</a>, ptr, <a class="el" href="classcpl_1_1ref.html">cpl::ref</a>&lt; T &gt;(<a class="el" href="namespacecpl.html#a205c84d0c8d8291953c58fa3a9f7a0df">cpl::unsafe_ref</a>&lt; T &gt;(*(T *) nullptr)), <a class="el" href="classcpl_1_1ref.html">cpl::ref</a>&lt; const T &gt;(<a class="el" href="namespacecpl.html#a205c84d0c8d8291953c58fa3a9f7a0df">cpl::unsafe_ref</a>&lt; T &gt;(*(T *) nullptr)), <a class="el" href="test_8cpp.html#a62780445b9cd8dca10c6f8537557ec6d">COPY</a>)</td></tr>
 <tr class="memdesc:ab415db1615995bec4cbb119b6fb3c3da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify <code><a class="el" href="classcpl_1_1ref.html" title="A reference for data whose lifetime is determined elsewhere.">cpl::ref</a></code> is protected against invalid construction.  <a href="#ab415db1615995bec4cbb119b6fb3c3da"></a><br/></td></tr>
 <tr class="separator:ab415db1615995bec4cbb119b6fb3c3da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a850d92c9db86e3f2331e88eea98ed64d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a850d92c9db86e3f2331e88eea98ed64d">MUST_NOT_COMPILE</a> (<a class="el" href="structtest_1_1Foo.html">Foo</a>, bool(*(<a class="el" href="classcpl_1_1ref.html">cpl::ref</a>&lt; T &gt; *)&amp;<a class="el" href="namespacetest.html#aacb3ac4f0a9eda9af124323f56079f28">s_foo_ref</a>),&quot;testing references&quot;)</td></tr>
+<tr class="memdesc:a850d92c9db86e3f2331e88eea98ed64d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify we can't test a reference for null-ness.  <a href="#a850d92c9db86e3f2331e88eea98ed64d"></a><br/></td></tr>
+<tr class="separator:a850d92c9db86e3f2331e88eea98ed64d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12793195117a4643cf4398fcba870973"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#a12793195117a4643cf4398fcba870973">TEST_CASE</a> (&quot;casting a <a class="el" href="classref.html">ref</a>&quot;)</td></tr>
 <tr class="separator:a12793195117a4643cf4398fcba870973"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc09243895b6649168cc60e4712faa6f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetest.html#afc09243895b6649168cc60e4712faa6f">TEST_CASE</a> (&quot;constructing a ptr&quot;)</td></tr>
@@ -301,6 +310,108 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a85401845f582cfede922bb2a3b750baf"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">test::MUST_NOT_COMPILE </td>
+          <td>(</td>
+          <td class="paramtype">Foo&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool(*(<a class="el" href="classcpl_1_1sref.html">cpl::sref</a>&lt; T &gt; *)&amp;s_foo_sref)&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&quot;testing shared references&quot;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Verify we can't test a shared reference for null-ness. </p>
+
+</div>
+</div>
+<a class="anchor" id="ac0bc37718b2eac90abd893d3015ef4e0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">test::MUST_NOT_COMPILE </td>
+          <td>(</td>
+          <td class="paramtype">Foo&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool(*(<a class="el" href="classcpl_1_1uref.html">cpl::uref</a>&lt; T &gt; *)&amp;s_foo_uref)&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&quot;testing unique references&quot;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Verify we can't test a unique reference for null-ness. </p>
+
+</div>
+</div>
+<a class="anchor" id="a850d92c9db86e3f2331e88eea98ed64d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">test::MUST_NOT_COMPILE </td>
+          <td>(</td>
+          <td class="paramtype">Foo&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool(*(<a class="el" href="classcpl_1_1ref.html">cpl::ref</a>&lt; T &gt; *)&amp;s_foo_ref)&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&quot;testing references&quot;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Verify we can't test a reference for null-ness. </p>
+
+</div>
+</div>
 <a class="anchor" id="acc3d2120e4328d42414bf1b4450c5359"></a>
 <div class="memitem">
 <div class="memproto">
@@ -335,7 +446,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00612">612</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00623">623</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -353,7 +464,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00675">675</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00686">686</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -371,7 +482,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00705">705</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00719">719</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -389,7 +500,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00717">717</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00731">731</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -407,7 +518,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00746">746</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00760">760</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -425,7 +536,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00758">758</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00772">772</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -443,7 +554,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00770">770</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00784">784</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -461,7 +572,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00782">782</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00796">796</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -479,7 +590,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00816">816</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00833">833</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -497,7 +608,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00829">829</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00846">846</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -515,7 +626,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00862">862</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00879">879</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -533,7 +644,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00874">874</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00891">891</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -551,7 +662,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00894">894</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00911">911</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -569,7 +680,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00938">938</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00955">955</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -587,7 +698,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00980">980</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01000">1000</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -605,7 +716,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00993">993</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01013">1013</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -623,7 +734,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01025">1025</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01045">1045</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -641,7 +752,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01038">1038</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01058">1058</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -659,7 +770,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01051">1051</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01071">1071</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -677,7 +788,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01244">1244</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01264">1264</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -695,7 +806,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01275">1275</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01295">1295</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -713,7 +824,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01303">1303</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01323">1323</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -731,7 +842,7 @@ template&lt;class T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01322">1322</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01342">1342</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -978,7 +1089,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01020">1020</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01040">1040</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1002,7 +1113,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00968">968</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00985">985</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1026,7 +1137,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00741">741</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00755">755</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1050,7 +1161,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00694">694</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00705">705</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1074,7 +1185,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00852">852</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00869">869</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1098,7 +1209,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00800">800</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00814">814</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1122,7 +1233,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00974">974</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00991">991</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1146,7 +1257,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00700">700</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00711">711</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1170,7 +1281,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00806">806</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00820">820</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1194,7 +1305,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00971">971</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00988">988</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1218,7 +1329,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00697">697</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00708">708</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1242,7 +1353,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00803">803</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00817">817</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1266,7 +1377,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l01017">1017</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l01037">1037</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1290,7 +1401,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00965">965</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00982">982</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1314,7 +1425,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00738">738</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00752">752</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1338,7 +1449,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00691">691</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00702">702</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1362,7 +1473,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00849">849</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00866">866</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1386,7 +1497,7 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#ae26d91c624e8e001b72375ac83ffaff7">VERIFY_INVALID_REF_CONSTRUCTION</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00797">797</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00811">811</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
@@ -1410,14 +1521,14 @@ template&lt;class T &gt; </div>
 
 <p>Used for <a class="el" href="namespacetest.html#a8695da74d14873c58b8585be7a686e69">MUST_NOT_COMPILE</a>. </p>
 
-<p>Definition at line <a class="el" href="test_8cpp_source.html#l00962">962</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
+<p>Definition at line <a class="el" href="test_8cpp_source.html#l00979">979</a> of file <a class="el" href="test_8cpp_source.html">test.cpp</a>.</p>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Jul 7 2015 08:22:07 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 18 2015 08:15:27 for CPL by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.2
 </small></address>

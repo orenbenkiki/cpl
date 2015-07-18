@@ -10,6 +10,6 @@ var searchData=
   ['make_5furef',['make_uref',['../namespacecpl.html#a3c8cb4c0096c46fef78b5f07f15f4008',1,'cpl']]],
   ['map',['map',['../classcpl_1_1map.html',1,'cpl']]],
   ['move',['MOVE',['../test_8cpp.html#a7d53160e7a0a05a69892a1a34b00b0a2',1,'test.cpp']]],
-  ['must_5fnot_5fcompile',['MUST_NOT_COMPILE',['../test_8cpp.html#ac65fd8adb35b5b64290ed31bc5698d03',1,'MUST_NOT_COMPILE():&#160;test.cpp'],['../namespacetest.html#a8695da74d14873c58b8585be7a686e69',1,'test::MUST_NOT_COMPILE()']]],
+  ['must_5fnot_5fcompile',['MUST_NOT_COMPILE',['../test_8cpp.html#ac65fd8adb35b5b64290ed31bc5698d03',1,'MUST_NOT_COMPILE():&#160;test.cpp'],['../namespacetest.html#a8695da74d14873c58b8585be7a686e69',1,'test::MUST_NOT_COMPILE(Foo, T(&quot;string&quot;),&quot;invalid constructor parameter&quot;)'],['../namespacetest.html#a85401845f582cfede922bb2a3b750baf',1,'test::MUST_NOT_COMPILE(Foo, bool(*(cpl::sref&lt; T &gt; *)&amp;s_foo_sref),&quot;testing shared references&quot;)'],['../namespacetest.html#ac0bc37718b2eac90abd893d3015ef4e0',1,'test::MUST_NOT_COMPILE(Foo, bool(*(cpl::uref&lt; T &gt; *)&amp;s_foo_uref),&quot;testing unique references&quot;)'],['../namespacetest.html#a850d92c9db86e3f2331e88eea98ed64d',1,'test::MUST_NOT_COMPILE(Foo, bool(*(cpl::ref&lt; T &gt; *)&amp;s_foo_ref),&quot;testing references&quot;)']]],
   ['must_5fnot_5fcompile_5fwith_5fid',['MUST_NOT_COMPILE_WITH_ID',['../test_8cpp.html#a4d40a174a27a4a03726640dbf87342c1',1,'test.cpp']]]
 ];

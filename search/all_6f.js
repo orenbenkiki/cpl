@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['operator_20bool',['operator bool',['../classcpl_1_1ptr.html#a079670db419d23e8ba58616125d7ee46',1,'cpl::ptr']]],
+  ['operator_20bool',['operator bool',['../classcpl_1_1sref.html#a37020b99af801cccf5f67ded5603a199',1,'cpl::sref::operator bool()'],['../classcpl_1_1uref.html#a2093118be400adaf63f941262ebda196',1,'cpl::uref::operator bool()'],['../classcpl_1_1ptr.html#a079670db419d23e8ba58616125d7ee46',1,'cpl::ptr::operator bool()']]],
   ['operator_20t_20_26',['operator T &amp;',['../classcpl_1_1sref.html#a6cc7016416ca5ac706852dbd21f0b042',1,'cpl::sref::operator T &amp;()'],['../classcpl_1_1uref.html#a3bb3e98f1c488d35ffb615ed32864df9',1,'cpl::uref::operator T &amp;()'],['../classcpl_1_1ref.html#a63288ac9387ae94e8d30841bc4e4611c',1,'cpl::ref::operator T &amp;()']]],
   ['operator_28_29',['operator()',['../structcpl_1_1no__delete.html#a482ad2a4fd521b463356b4ccad3b1840',1,'cpl::no_delete']]],
   ['operator_2a',['operator*',['../classcpl_1_1opt.html#ae596668e4ce32eb4a2773a592204eeb1',1,'cpl::opt::operator*()'],['../classcpl_1_1opt.html#aa92e8709479f7e588b186c6da4c56cb8',1,'cpl::opt::operator*() const '],['../classcpl_1_1shared.html#a1cf59285d77e4acea81664725e01795e',1,'cpl::shared::operator*()'],['../classcpl_1_1unique.html#a79791fb3a14b566234f5eeec45b2a03a',1,'cpl::unique::operator*()'],['../classcpl_1_1borrow.html#a13116342bc20135e9f9dcfc79324bd2f',1,'cpl::borrow::operator*()']]],
